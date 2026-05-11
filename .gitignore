@@ -30,6 +30,7 @@ env/
 *.key
 *.log
 logs/
+gitleaks-*-report.json
 
 # Editor/OS noise
 .DS_Store
