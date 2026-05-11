@@ -1,0 +1,109 @@
+# Synthetic, non-proprietary prompt suite (≈20 tests)
+# Each test has unique id and a task_type label.
+tests:
+  - id: math_arithmetic_1
+    task_type: math
+    system: "You are a precise calculator. Output only the final answer."
+    user: "Compute: 1783 + 946 - 502."
+
+  - id: math_arithmetic_2
+    task_type: math
+    system: "You are a precise calculator. Output only the final answer."
+    user: "Compute: (72 * 19) + (144 / 12)."
+
+  - id: logic_boolean
+    task_type: reasoning
+    system: "Answer with only TRUE or FALSE."
+    user: "If all cats are mammals and some mammals are pets, does it follow that some cats are pets?"
+
+  - id: classify_sentiment
+    task_type: classification
+    system: "Classify sentiment as: positive, neutral, or negative. Output only the label."
+    user: "The update is fine, nothing special."
+
+  - id: extract_json
+    task_type: extraction
+    system: 'Extract fields and return strict JSON only: {"name":...,"city":...,"age":...}.'
+    user: "Hi, I'm Sam, 29, living in Dubai."
+
+  - id: summarize_short
+    task_type: summarization
+    system: "Summarize in one sentence, <= 18 words."
+    user: >
+      Cost regression gates prevent changes that silently increase spending.
+      They compare distributions, not single runs.
+
+  - id: rewrite_formal
+    task_type: rewriting
+    system: "Rewrite formally in one sentence."
+    user: "We gotta ship this fast but keep it safe."
+
+  - id: translate_es
+    task_type: translation
+    system: "Translate to Spanish. Output only the translation."
+    user: "The build passed, but performance regressed."
+
+  - id: translate_fr
+    task_type: translation
+    system: "Translate to French. Output only the translation."
+    user: "Please re-run the benchmark with deterministic settings."
+
+  - id: code_readability
+    task_type: code
+    system: "Explain briefly in 2 bullet points."
+    user: |
+      def f(xs):
+          return [x*x for x in xs if x % 2 == 0]
+
+  - id: regex_task
+    task_type: code
+    system: "Provide a Python regex only."
+    user: "Match US phone numbers like (415) 555-2671 or 415-555-2671."
+
+  - id: planning_steps
+    task_type: planning
+    system: "Return a numbered list of exactly 5 steps."
+    user: "Outline steps to validate a YAML config in a CLI tool."
+
+  - id: qa_factual_simple
+    task_type: qa
+    system: "Answer in one short sentence."
+    user: "What is the boiling point of water at sea level in Celsius?"
+
+  - id: qa_concept
+    task_type: qa
+    system: "Answer in two sentences."
+    user: "What does 'p95 latency' mean?"
+
+  - id: compression
+    task_type: rewriting
+    system: "Compress into <= 12 words."
+    user: "Statistical significance without practical impact is not enough to gate changes."
+
+  - id: sort_words
+    task_type: transformation
+    system: "Sort words alphabetically and output as a single comma-separated line."
+    user: "delta alpha gamma beta"
+
+  - id: minimal_poem
+    task_type: creative
+    system: "Write a haiku about deterministic tests. No title."
+    user: "Go."
+
+  - id: safety_style
+    task_type: instruction_following
+    system: "Output only 'ACK' if you understand."
+    user: "Use deterministic settings and record token_source for each run."
+
+  - id: parse_table
+    task_type: extraction
+    system: "Extract rows into JSON array of objects with keys a,b."
+    user: |
+      a | b
+      1 | 2
+      3 | 4
+
+  - id: compare_two_items
+    task_type: reasoning
+    system: "Answer in one sentence."
+    user: "Which is larger: 2^10 or 10^3?"

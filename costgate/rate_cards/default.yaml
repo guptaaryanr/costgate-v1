@@ -1,0 +1,20 @@
+# Rate card rules: match by model glob, with separate input/output $ per 1K tokens.
+# Update these as your org changes models/prices.
+version: 1
+currency: USD
+rules:
+  - model_glob: "gpt-4o-mini*"
+    input_usd_per_1k: 0.00015
+    output_usd_per_1k: 0.00060
+
+  - model_glob: "gpt-4o*"
+    input_usd_per_1k: 0.00250
+    output_usd_per_1k: 0.01000
+
+  - model_glob: "gpt-4.1-mini*"
+    input_usd_per_1k: 0.00030
+    output_usd_per_1k: 0.00120
+
+  - model_glob: "gpt-3.5-turbo*"
+    input_usd_per_1k: 0.00050
+    output_usd_per_1k: 0.00150

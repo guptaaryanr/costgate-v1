@@ -1,0 +1,22 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Local Python artifacts
+.venv
+*__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Generated costgate run outputs
+.costgate/

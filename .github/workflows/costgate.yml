@@ -1,0 +1,109 @@
+name: costgate
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  baseline:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Check OpenAI API key
+        id: openai_key
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [[ -n "${OPENAI_API_KEY}" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::OPENAI_API_KEY secret is not configured; skipping costgate baseline."
+          fi
+
+      - name: Run baseline
+        if: steps.openai_key.outputs.available == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          chmod +x scripts/ci_run.sh
+          scripts/ci_run.sh baseline
+
+      - name: Upload baseline artifact
+        if: steps.openai_key.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: costgate-baseline
+          path: |
+            .costgate/baselines
+            .costgate/latest_baseline_key.txt
+            .costgate/results.json
+          retention-days: 14
+
+  pr_gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Check OpenAI API key
+        id: openai_key
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [[ -n "${OPENAI_API_KEY}" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::OPENAI_API_KEY secret is not configured; skipping costgate PR gate."
+          fi
+
+      - name: Download latest baseline artifact from main
+        if: steps.openai_key.outputs.available == 'true'
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: costgate.yml
+          branch: main
+          name: costgate-baseline
+          path: .costgate
+          if_no_artifact_found: fail
+
+      - name: Run costgate PR gate
+        if: steps.openai_key.outputs.available == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          chmod +x scripts/ci_run.sh
+          scripts/ci_run.sh pr
+
+      - name: Upload PR report artifacts
+        if: always() && steps.openai_key.outputs.available == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: costgate-pr-artifacts
+          path: |
+            .costgate/report.md
+            .costgate/compare.json
+            .costgate/pr_results.json
+            .costgate/results.json
