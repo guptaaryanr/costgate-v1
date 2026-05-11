@@ -42,9 +42,10 @@ if [[ -f "${ENV_FILE}" ]]; then
   load_env_file "${ENV_FILE}"
 fi
 
-SUITE="${COSTGATE_SUITE:-costgate/suites/demo_suite.yaml}"
+SUITE="${COSTGATE_SUITE:-costgate/suites/demo_validated_suite.yaml}"
 RATE="${COSTGATE_RATE_CARD:-costgate/rate_cards/default.yaml}"
 POLICY="${COSTGATE_POLICY:-costgate/policies/default.yaml}"
+PROVIDER_CONFIG="${COSTGATE_PROVIDER_CONFIG:-}"
 
 PROVIDER="${COSTGATE_PROVIDER:-openai}"
 MODEL="${COSTGATE_MODEL:-gpt-4o-mini}"
@@ -63,6 +64,11 @@ fi
 
 mkdir -p .costgate
 
+PROVIDER_CONFIG_ARGS=()
+if [[ -n "${PROVIDER_CONFIG}" ]]; then
+  PROVIDER_CONFIG_ARGS=(--provider-config "${PROVIDER_CONFIG}")
+fi
+
 if [[ "${MODE}" == "baseline" ]]; then
   echo "[costgate] Running baseline..."
   costgate validate --suite "${SUITE}" --rate-card "${RATE}" --policy "${POLICY}"
@@ -75,7 +81,8 @@ if [[ "${MODE}" == "baseline" ]]; then
     --repeats "${REPEATS}" \
     --max-output-tokens "${MAX_OUT}" \
     --out .costgate/results.json \
-    --baselines-root .costgate/baselines
+    --baselines-root .costgate/baselines \
+    "${PROVIDER_CONFIG_ARGS[@]}"
 
   echo "[costgate] Baseline done."
   exit 0
@@ -97,7 +104,8 @@ if [[ "${MODE}" == "pr" ]]; then
     --rate-card "${RATE}" \
     --repeats "${REPEATS}" \
     --max-output-tokens "${MAX_OUT}" \
-    --out .costgate/pr_results.json
+    --out .costgate/pr_results.json \
+    "${PROVIDER_CONFIG_ARGS[@]}"
 
   # Compare against latest baseline under .costgate/baselines.
   set +e

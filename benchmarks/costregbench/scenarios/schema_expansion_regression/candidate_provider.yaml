@@ -1,0 +1,6 @@
+default:
+  output_text: '{"total":"123.45"}'
+  input_tokens: 14
+  output_tokens: 70
+  latency_ms: 28
+  token_source: mock

@@ -3,24 +3,21 @@ from __future__ import annotations
 import fnmatch
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
+
+from costgate.metrics import REQUIRED_METRICS
 
 
 class ValidationError(ValueError):
     pass
 
 
-SUPPORTED_METRICS = {
-    "total_cost_usd",
-    "cost_per_success_usd",
-    "p50_latency_ms",
-    "p95_latency_ms",
-    "mean_input_tokens",
-    "mean_output_tokens",
-    "retry_rate",
-}
+SUPPORTED_METRICS = REQUIRED_METRICS | {"cost_per_success_usd"}
+SUPPORTED_DIRECTIONS = {"higher_is_worse", "lower_is_worse"}
+SUPPORTED_SEVERITIES = {"fail", "warn"}
+SUPPORTED_STATISTICAL_TESTS = {"mann_whitney", "bootstrap", "none"}
 
 
 @dataclass(frozen=True)
@@ -46,6 +43,7 @@ class VarianceAwareCfg:
 @dataclass(frozen=True)
 class Policy:
     version: int
+    gates: Dict[str, "Gate"]
     metrics_to_gate: List[str]
     regression_threshold_pct: Dict[str, float]
     min_absolute_delta_usd: float
@@ -53,6 +51,20 @@ class Policy:
     min_repeats: int
     min_sample_size: int
     variance_aware: VarianceAwareCfg
+
+
+@dataclass(frozen=True)
+class Gate:
+    metric: str
+    direction: str
+    severity: str
+    max_relative_increase: Optional[float] = None
+    max_relative_decrease: Optional[float] = None
+    min_absolute_value: Optional[float] = None
+    max_absolute_value: Optional[float] = None
+    min_absolute_delta_usd: Optional[float] = None
+    statistical_test: str = "mann_whitney"
+    alpha: Optional[float] = None
 
 
 def load_yaml(path: Path) -> Any:
@@ -116,14 +128,8 @@ def load_and_validate_policy(path: Path) -> Policy:
     if version != 1:
         raise ValidationError("Policy version must be 1.")
 
+    gates_obj = obj.get("gates")
     metrics = obj.get("metrics_to_gate")
-    if not isinstance(metrics, list) or not metrics:
-        raise ValidationError("metrics_to_gate must be a non-empty list.")
-    for m in metrics:
-        if m not in SUPPORTED_METRICS:
-            raise ValidationError(
-                f"Unsupported metric in metrics_to_gate: {m}. Supported: {sorted(SUPPORTED_METRICS)}"
-            )
 
     thresholds = obj.get("regression_threshold_pct", {})
     if not isinstance(thresholds, dict):
@@ -161,9 +167,45 @@ def load_and_validate_policy(path: Path) -> Policy:
     if not isinstance(k, (int, float)) or k <= 0:
         raise ValidationError("variance_aware.k must be > 0.")
 
+    gates: Dict[str, Gate]
+    if gates_obj is not None:
+        gates = _parse_gates(gates_obj, default_alpha=float(alpha), default_min_abs=float(min_abs))
+        parsed_thresholds = {
+            metric: float(g.max_relative_increase * 100.0)
+            for metric, g in gates.items()
+            if g.max_relative_increase is not None
+        }
+        parsed_metrics = list(gates)
+    else:
+        if not isinstance(metrics, list) or not metrics:
+            raise ValidationError("metrics_to_gate must be a non-empty list when gates is absent.")
+        for m in metrics:
+            if m not in SUPPORTED_METRICS:
+                raise ValidationError(
+                    f"Unsupported metric in metrics_to_gate: {m}. Supported: {sorted(SUPPORTED_METRICS)}"
+                )
+        parsed_metrics = list(metrics)
+        gates = {}
+        for metric in parsed_metrics:
+            threshold_pct = float(parsed_thresholds.get(metric, 10.0))
+            gates[metric] = Gate(
+                metric=metric,
+                direction=_default_direction(metric),
+                severity="fail",
+                max_relative_increase=(
+                    threshold_pct / 100.0 if _default_direction(metric) == "higher_is_worse" else None
+                ),
+                max_relative_decrease=(
+                    threshold_pct / 100.0 if _default_direction(metric) == "lower_is_worse" else None
+                ),
+                min_absolute_delta_usd=float(min_abs) if _is_cost_metric(metric) else None,
+                alpha=float(alpha),
+            )
+
     return Policy(
         version=version,
-        metrics_to_gate=list(metrics),
+        gates=gates,
+        metrics_to_gate=parsed_metrics,
         regression_threshold_pct=parsed_thresholds,
         min_absolute_delta_usd=float(min_abs),
         alpha=float(alpha),
@@ -171,3 +213,98 @@ def load_and_validate_policy(path: Path) -> Policy:
         min_sample_size=min_sample_size,
         variance_aware=VarianceAwareCfg(enabled=enabled, k=float(k)),
     )
+
+
+def _parse_gates(
+    gates_obj: Any, default_alpha: float, default_min_abs: float
+) -> Dict[str, Gate]:
+    if not isinstance(gates_obj, dict) or not gates_obj:
+        raise ValidationError("gates must be a non-empty mapping.")
+
+    gates: Dict[str, Gate] = {}
+    for metric, raw in gates_obj.items():
+        if metric not in SUPPORTED_METRICS:
+            raise ValidationError(
+                f"Unsupported metric in gates: {metric}. Supported: {sorted(SUPPORTED_METRICS)}"
+            )
+        if raw is None:
+            raw = {}
+        if not isinstance(raw, dict):
+            raise ValidationError(f"gates.{metric} must be a mapping.")
+
+        direction = str(raw.get("direction", _default_direction(metric)))
+        if direction not in SUPPORTED_DIRECTIONS:
+            raise ValidationError(
+                f"gates.{metric}.direction must be one of {sorted(SUPPORTED_DIRECTIONS)}."
+            )
+
+        severity = str(raw.get("severity", _default_severity(metric)))
+        if severity not in SUPPORTED_SEVERITIES:
+            raise ValidationError(
+                f"gates.{metric}.severity must be one of {sorted(SUPPORTED_SEVERITIES)}."
+            )
+
+        stat = str(raw.get("statistical_test", "mann_whitney"))
+        if stat not in SUPPORTED_STATISTICAL_TESTS:
+            raise ValidationError(
+                f"gates.{metric}.statistical_test must be one of {sorted(SUPPORTED_STATISTICAL_TESTS)}."
+            )
+
+        gate_alpha = raw.get("alpha", default_alpha)
+        if not isinstance(gate_alpha, (int, float)) or not (0 < gate_alpha < 1):
+            raise ValidationError(f"gates.{metric}.alpha must be between 0 and 1.")
+
+        min_abs = raw.get("min_absolute_delta_usd")
+        if min_abs is None and _is_cost_metric(metric):
+            min_abs = default_min_abs
+        if min_abs is not None and (not isinstance(min_abs, (int, float)) or min_abs < 0):
+            raise ValidationError(f"gates.{metric}.min_absolute_delta_usd must be >= 0.")
+
+        gates[metric] = Gate(
+            metric=metric,
+            direction=direction,
+            severity=severity,
+            max_relative_increase=_optional_nonnegative_float(raw, "max_relative_increase"),
+            max_relative_decrease=_optional_nonnegative_float(raw, "max_relative_decrease"),
+            min_absolute_value=_optional_float(raw, "min_absolute_value"),
+            max_absolute_value=_optional_float(raw, "max_absolute_value"),
+            min_absolute_delta_usd=float(min_abs) if min_abs is not None else None,
+            statistical_test=stat,
+            alpha=float(gate_alpha),
+        )
+
+    return gates
+
+
+def _optional_float(raw: Dict[str, Any], key: str) -> Optional[float]:
+    if key not in raw or raw[key] is None:
+        return None
+    value = raw[key]
+    if not isinstance(value, (int, float)):
+        raise ValidationError(f"{key} must be a number.")
+    return float(value)
+
+
+def _optional_nonnegative_float(raw: Dict[str, Any], key: str) -> Optional[float]:
+    value = _optional_float(raw, key)
+    if value is not None and value < 0:
+        raise ValidationError(f"{key} must be >= 0.")
+    return value
+
+
+def _default_direction(metric: str) -> str:
+    if metric in {"api_success_rate", "task_success_rate"}:
+        return "lower_is_worse"
+    return "higher_is_worse"
+
+
+def _default_severity(metric: str) -> str:
+    if metric in {"p50_latency_ms", "p95_latency_ms"}:
+        return "warn"
+    if metric in {"cost_per_valid_success_usd", "total_cost_usd", "task_success_rate"}:
+        return "fail"
+    return "warn"
+
+
+def _is_cost_metric(metric: str) -> bool:
+    return "cost" in metric

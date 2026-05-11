@@ -1,0 +1,7 @@
+default:
+  output_text: "42"
+  input_tokens: 220
+  output_tokens: 120
+  latency_ms: 85
+  retry_count: 1
+  token_source: mock

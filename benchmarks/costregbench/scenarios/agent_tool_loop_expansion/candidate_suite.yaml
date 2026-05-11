@@ -1,0 +1,8 @@
+tests:
+  - id: answer
+    task_type: agent_sim
+    system: "Return only the answer after simulated tool reasoning."
+    user: "Use the available context and answer: 40 + 2."
+    expected:
+      type: exact
+      value: "42"

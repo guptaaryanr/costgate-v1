@@ -1,29 +1,29 @@
 from __future__ import annotations
 
-import json
+import hashlib
 import math
-import os
 import time
-from dataclasses import dataclass
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-
+from costgate import __version__
+from costgate.artifacts import RUN_SCHEMA_VERSION
 from costgate.baselines import (
     build_baseline_key,
     canonical_hash_yaml,
     canonical_hash_json_obj,
 )
+from costgate.metrics import compute_aggregates
+from costgate.providers import available_providers, get_provider
 from costgate.providers.base import ProviderRequest
-from costgate.providers.openai_provider import OpenAIProvider
-from costgate.suites import Suite, load_and_validate_suite
+from costgate.suites import load_and_validate_suite
 from costgate.validation import (
     RateCard,
-    ValidationError,
     load_and_validate_rate_card,
     match_rate_rule,
 )
+from costgate.validators import validate_output
 
 
 class RunError(RuntimeError):
@@ -45,20 +45,16 @@ def _git_sha() -> Optional[str]:
         return None
 
 
-def _provider_from_name(name: str):
-    if name == "openai":
-        return OpenAIProvider()
-    raise RunError(f"Unknown provider: {name}. Supported: openai", exit_code=1)
+def _provider_from_name(name: str, config: Optional[Dict[str, Any]] = None):
+    try:
+        return get_provider(name, config=config)
+    except Exception as e:
+        supported = ", ".join(available_providers())
+        raise RunError(f"{e}. Supported providers: {supported}", exit_code=1) from e
 
 
 def _now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
-
-def _percentile(arr: List[float], q: float) -> float:
-    if not arr:
-        return float("nan")
-    return float(np.percentile(np.array(arr, dtype=float), q))
 
 
 def _rate_or_error(
@@ -95,6 +91,42 @@ def _compute_cost_usd(
     return (input_tokens / 1000.0) * in_per_1k + (output_tokens / 1000.0) * out_per_1k
 
 
+def _output_hash(text: str) -> str:
+    return hashlib.sha256((text or "").encode("utf-8")).hexdigest()
+
+
+def _merge_provider_config(
+    provider: str, suite_config: Optional[Dict[str, Any]], cli_config: Optional[Dict[str, Any]]
+) -> Dict[str, Any]:
+    merged: Dict[str, Any] = {}
+    if suite_config:
+        if isinstance(suite_config.get(provider), dict):
+            merged.update(suite_config[provider])
+        else:
+            merged.update(suite_config)
+    if cli_config:
+        if isinstance(cli_config.get(provider), dict):
+            merged.update(cli_config[provider])
+        else:
+            merged.update(cli_config)
+    return merged
+
+
+def _token_source_summary(records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    counts: Dict[str, int] = {}
+    for record in records:
+        source = str(record.get("token_source") or "unknown")
+        counts[source] = counts.get(source, 0) + 1
+    total = len(records)
+    estimated = counts.get("estimated", 0)
+    return {
+        "counts": counts,
+        "estimated": estimated,
+        "total": total,
+        "estimated_token_fraction": estimated / total if total else float("nan"),
+    }
+
+
 def run_suite(
     provider: str,
     model: str,
@@ -104,6 +136,7 @@ def run_suite(
     max_output_tokens: int = 96,
     allow_missing_rate: bool = False,
     timeout_s: float = 60.0,
+    provider_config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     if repeats <= 0:
         raise RunError("repeats must be > 0", exit_code=1)
@@ -113,22 +146,29 @@ def run_suite(
 
     suite_hash = canonical_hash_yaml(suite_path)
     rate_card_hash = canonical_hash_yaml(rate_card_path)
+    provider_config_final = _merge_provider_config(
+        provider, suite.provider_config, provider_config
+    )
+    provider_config_hash = canonical_hash_json_obj(provider_config_final)
 
     params = {
         "temperature": 0.0,
         "top_p": 1.0,
         "max_output_tokens": int(max_output_tokens),
         "timeout_s": float(timeout_s),
+        "provider_config_hash": provider_config_hash,
     }
     params_hash = canonical_hash_json_obj(params)
 
-    prov = _provider_from_name(provider)
+    prov = _provider_from_name(provider, config=provider_config_final)
 
     started_at = _now_iso()
     git_sha = _git_sha()
+    run_id = f"run_{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{uuid.uuid4().hex[:10]}"
 
     per_call_runs: List[Dict[str, Any]] = []
     per_repeat_aggregates: List[Dict[str, Any]] = []
+    warnings: List[Dict[str, Any]] = []
 
     resolved_model_final: Optional[str] = None
     rate_glob_used: Optional[str] = None
@@ -136,13 +176,6 @@ def run_suite(
     out_per_1k_final: Optional[float] = None
 
     for r in range(repeats):
-        latencies: List[float] = []
-        in_tokens: List[int] = []
-        out_tokens: List[int] = []
-        retry_counts: List[int] = []
-        costs: List[float] = []
-        successes = 0
-
         for t in suite.tests:
             req = ProviderRequest(
                 model=model,
@@ -154,6 +187,11 @@ def run_suite(
                 top_p=1.0,
                 max_output_tokens=max_output_tokens,
                 timeout_s=timeout_s,
+                extra={
+                    "task_id": t.id,
+                    "task_type": t.task_type,
+                    "repeat_index": r,
+                },
             )
 
             resp = prov.complete(req)
@@ -168,11 +206,34 @@ def run_suite(
             cost = _compute_cost_usd(
                 resp.input_tokens, resp.output_tokens, in_per_1k_final, out_per_1k_final
             )
+            api_success = bool(resp.success)
+            validator_result = validate_output(
+                output=resp.text or "",
+                expected=t.expected,
+                api_success=api_success,
+            )
+            task_success = bool(api_success and validator_result.passed)
+            if validator_result.warning:
+                warnings.append(
+                    {
+                        "type": "missing_validator",
+                        "task_id": t.id,
+                        "repeat": r,
+                        "message": validator_result.warning,
+                    }
+                )
 
             record = {
-                "repeat_index": r,
+                "task_id": t.id,
                 "test_id": t.id,
                 "task_type": t.task_type,
+                "repeat": r,
+                "repeat_index": r,
+                "api_success": api_success,
+                "task_success": task_success,
+                "validator_type": validator_result.validator_type,
+                "validator_passed": bool(validator_result.passed),
+                "validator_details": validator_result.details,
                 "latency_ms": resp.latency_ms,
                 "retry_count": resp.retry_count,
                 "input_tokens": resp.input_tokens,
@@ -180,47 +241,16 @@ def run_suite(
                 "total_tokens": resp.total_tokens,
                 "token_source": resp.token_source,
                 "cost_usd": cost,
-                "success": resp.success,
+                "cost_status": "ok" if math.isfinite(cost) else "missing_cost",
+                "success": api_success,
                 "error": resp.error,
+                "output_hash": _output_hash(resp.text or ""),
+                "output_text": resp.text or "",
             }
             per_call_runs.append(record)
 
-            latencies.append(resp.latency_ms)
-            retry_counts.append(resp.retry_count)
-            if resp.input_tokens is not None:
-                in_tokens.append(int(resp.input_tokens))
-            if resp.output_tokens is not None:
-                out_tokens.append(int(resp.output_tokens))
-            costs.append(cost)
-            if resp.success:
-                successes += 1
-
-        total_cost = float(np.nansum(np.array(costs, dtype=float)))
-        cost_per_success = total_cost / successes if successes > 0 else float("inf")
-        retry_rate = (
-            float(np.mean(np.array(retry_counts, dtype=float))) if retry_counts else 0.0
-        )
-
-        agg = {
-            "repeat_index": r,
-            "total_cost_usd": total_cost,
-            "cost_per_success_usd": cost_per_success,
-            "p50_latency_ms": _percentile(latencies, 50),
-            "p95_latency_ms": _percentile(latencies, 95),
-            "mean_input_tokens": (
-                float(np.mean(np.array(in_tokens, dtype=float)))
-                if in_tokens
-                else float("nan")
-            ),
-            "mean_output_tokens": (
-                float(np.mean(np.array(out_tokens, dtype=float)))
-                if out_tokens
-                else float("nan")
-            ),
-            "retry_rate": retry_rate,
-            "successes": successes,
-            "calls": len(suite.tests),
-        }
+        repeat_records = [record for record in per_call_runs if record["repeat_index"] == r]
+        agg = compute_aggregates(repeat_records, repeat_index=r)
         per_repeat_aggregates.append(agg)
 
     ended_at = _now_iso()
@@ -232,13 +262,18 @@ def run_suite(
         resolved_model=resolved_model_final,
         params_hash=params_hash,
         rate_card_hash=rate_card_hash,
+        artifact_schema=RUN_SCHEMA_VERSION,
     )
 
     meta = {
+        "schema_version": RUN_SCHEMA_VERSION,
+        "costgate_version": __version__,
+        "run_id": run_id,
         "provider": provider,
         "requested_model": model,
         "resolved_model": resolved_model_final,
         "params": params,
+        "provider_config_hash": provider_config_hash,
         "repeats": repeats,
         "suite_path": str(suite_path),
         "rate_card_path": str(rate_card_path),
@@ -248,14 +283,36 @@ def run_suite(
         "rate_rule_glob": rate_glob_used,
         "rate_input_usd_per_1k": in_per_1k_final,
         "rate_output_usd_per_1k": out_per_1k_final,
+        "pricing_version": card.version,
+        "tokenizer": None,
         "started_at": started_at,
         "ended_at": ended_at,
+        "timestamp": started_at,
         "git_sha": git_sha,
         "baseline_key": baseline_key,
     }
 
+    overall_aggregates = compute_aggregates(per_call_runs)
+    token_source_summary = _token_source_summary(per_call_runs)
+
     return {
+        "schema_version": RUN_SCHEMA_VERSION,
+        "costgate_version": __version__,
+        "run_id": run_id,
+        "timestamp": started_at,
+        "provider": provider,
+        "model": resolved_model_final,
+        "requested_model": model,
+        "suite_hash": suite_hash,
+        "params_hash": params_hash,
+        "rate_card_hash": rate_card_hash,
+        "pricing_version": card.version,
+        "token_source": token_source_summary,
         "meta": meta,
+        "calls": per_call_runs,
+        "tasks": per_call_runs,
         "per_call_runs": per_call_runs,
         "per_repeat_aggregates": per_repeat_aggregates,
+        "overall_aggregates": overall_aggregates,
+        "warnings": warnings,
     }

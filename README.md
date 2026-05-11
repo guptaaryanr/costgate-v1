@@ -1,140 +1,224 @@
-# costgate
+# Costgate
 
-A CI-native cost regression gate for LLM inference and related runtime costs.
+Costgate is a local/CI-first regression gate for LLM inference cost. It compares a baseline run against a candidate run, checks practical and statistical thresholds, writes versioned artifacts, and exits non-zero when a policy says the candidate regressed.
 
-Costgate runs a deterministic synthetic harness (no proprietary data), repeats runs to form distributions (default N=7), computes cost/unit metrics using a YAML rate card, compares PR vs baseline using **practical thresholds + statistical significance**, and fails CI on regressions.
+Costgate is not an observability dashboard, SaaS product, prompt optimizer, generic eval platform, or long-term metrics store. It is meant to be a small open-source tool that can run in a repository, a GitHub Action, or a paper artifact workflow.
 
-## Quickstart (local)
+## Why Cost Regressions Matter
 
-### 1) Install
+LLM changes can silently increase cost through longer prompts, larger contexts, verbose outputs, retries, model swaps, schema expansion, or tool-loop growth. Unit tests may still pass, and provider API calls may still succeed. Costgate therefore separates:
+
+- `api_success`: the provider returned without error.
+- `task_success`: the model output passed the suite's expected-output validator.
+
+The primary v1 metric is `cost_per_valid_success_usd`, meaning cost per task-valid successful answer.
+
+## Quickstart With MockProvider
+
+No API key or network call is required:
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -e .
+python -m pip install -e .[test]
+
+cat > /tmp/costgate-mock.yaml <<'YAML'
+default:
+  output_text: "2227"
+  input_tokens: 20
+  output_tokens: 4
+  latency_ms: 25
+  token_source: mock
+tasks:
+  extract_invoice_total:
+    output_text: '{"total":"123.45"}'
+    input_tokens: 24
+    output_tokens: 8
+  classification_1:
+    output_text: "neutral"
+  numeric_1:
+    output_text: "2.5"
+YAML
+
+python -m costgate.cli run \
+  --provider mock \
+  --model mock-cheap \
+  --suite costgate/suites/demo_validated_suite.yaml \
+  --rate-card benchmarks/costregbench/rate_card.yaml \
+  --provider-config /tmp/costgate-mock.yaml \
+  --repeats 5 \
+  --out .costgate/mock-baseline.json
 ```
 
-### 2) Set OPENAI_API_KEY
-```bash
-export OPENAI_API_KEY="YOUR_KEY"
-```
+## Quickstart With OpenAI
 
-### 3) Run a baseline (saved under .costgate/baselines/<baseline_key>/baseline.json)
 ```bash
-costgate baseline \
+export OPENAI_API_KEY="..."
+
+python -m costgate.cli baseline \
   --provider openai \
   --model gpt-4o-mini \
-  --suite costgate/suites/demo_suite.yaml \
+  --suite costgate/suites/demo_validated_suite.yaml \
   --rate-card costgate/rate_cards/default.yaml \
-  --repeats 7 \
-  --max-output-tokens 96 \
-  --out .costgate/results.json \
-  --baselines-root .costgate/baselines
+  --policy costgate/policies/default.yaml \
+  --repeats 7
 ```
 
-### 4) Run again with no changes (should PASS)
-```bash
-costgate run \
-  --provider openai \
-  --model gpt-4o-mini \
-  --suite costgate/suites/demo_suite.yaml \
-  --rate-card costgate/rate_cards/default.yaml \
-  --repeats 7 \
-  --max-output-tokens 96 \
-  --out .costgate/pr_results.json
+OpenAI dependencies are loaded lazily, so importing the CLI or running mock/replay tests does not require an API key.
 
-costgate compare \
-  --pr-results .costgate/pr_results.json \
+## Baseline And Candidate Workflow
+
+Create a baseline:
+
+```bash
+python -m costgate.cli baseline \
+  --provider mock \
+  --model mock-cheap \
+  --suite costgate/suites/demo_validated_suite.yaml \
+  --rate-card benchmarks/costregbench/rate_card.yaml \
+  --provider-config /tmp/costgate-mock.yaml \
+  --repeats 5
+```
+
+Run a candidate:
+
+```bash
+python -m costgate.cli run \
+  --provider mock \
+  --model mock-cheap \
+  --suite costgate/suites/demo_validated_suite.yaml \
+  --rate-card benchmarks/costregbench/rate_card.yaml \
+  --provider-config /tmp/costgate-mock.yaml \
+  --repeats 5 \
+  --out .costgate/candidate.json
+```
+
+Compare:
+
+```bash
+python -m costgate.cli compare \
+  --pr-results .costgate/candidate.json \
   --baseline-root .costgate/baselines \
   --baseline-auto \
   --policy costgate/policies/default.yaml \
   --report-out .costgate/report.md \
-  --compare-out .costgate/compare.json \
-  --exit-on-regression
+  --compare-out .costgate/compare.json
 ```
 
-Open the report:
+Costgate refuses baseline-family mismatches by default. The family includes suite hash, provider, resolved model, deterministic params, rate-card hash, tokenizer when available, and artifact schema compatibility.
+
+## Suite Validators
+
+Tests support expected validators:
+
+- `exact`
+- `contains`
+- `regex`
+- `json_schema`
+- `numeric_tolerance`
+
+If no `expected` validator is supplied, `task_success` defaults to `api_success` and reports include a warning because success-normalized metrics are weaker.
+
+## Policy Format
+
+Policies use explicit gates:
+
+```yaml
+version: 1
+gates:
+  cost_per_valid_success_usd:
+    direction: higher_is_worse
+    max_relative_increase: 0.10
+    min_absolute_delta_usd: 0.00005
+    statistical_test: mann_whitney
+    alpha: 0.05
+    severity: fail
+
+  task_success_rate:
+    direction: lower_is_worse
+    min_absolute_value: 0.95
+    max_relative_decrease: 0.05
+    severity: fail
+
+  p95_latency_ms:
+    direction: higher_is_worse
+    max_relative_increase: 0.50
+    severity: warn
+```
+
+Overall verdict is `fail` if any fail-severity gate triggers, `warn` if no fail gate triggers but a warning or insufficient-data condition exists, and `pass` otherwise.
+
+## Artifacts
+
+Run artifacts are versioned with `schema_version: costgate.run.v1` and include:
+
+- run/provider/model metadata
+- suite, params, and rate-card hashes
+- token-source summary
+- call records with API success, task success, validator details, tokens, cost, latency, retries, errors, and output hashes
+- per-repeat aggregates
+- overall aggregates
+
+Comparison artifacts use `schema_version: costgate.compare.v1` and include policy, statistical results, per-metric verdicts, overall verdict, and report path.
+
+## GitHub Action Usage
+
+This repository includes `action.yml`. A minimal usage pattern:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: actions/setup-python@v5
+  with:
+    python-version: "3.11"
+- uses: ./
+  with:
+    provider: mock
+    model: mock-cheap
+    suite-path: costgate/suites/demo_validated_suite.yaml
+    rate-card-path: benchmarks/costregbench/rate_card.yaml
+    provider-config: path/to/mock-provider.yaml
+    baseline-path: path/to/baseline.json
+    output-dir: .costgate
+    fail-on-regression: "true"
+```
+
+The action generates `candidate.json`, `compare.json`, and `report.md`; failing CI on regression is enough for v1.
+
+## CostRegBench
+
+CostRegBench lives under `benchmarks/costregbench/` and covers controlled deterministic scenarios:
+
+- prompt verbosity regression
+- context bloat regression
+- schema expansion regression
+- model swap regression
+- retry expansion regression
+- agent/tool-loop expansion
+- neutral/no-op changes
+- cost reduction changes
+
+Run:
+
 ```bash
-cat .costgate/report.md
+python benchmarks/costregbench/run.py
+python benchmarks/costregbench/run.py --scenario neutral_noop
 ```
 
-## Baseline workflow (how it's namespaced)
-Baselines are stored by family key:
-```scss
-(suite_hash, provider, resolved_model, params_hash, rate_card_hash)
-```
+Some scenarios should report `actual=fail` or `actual=warn`; that means Costgate correctly detected the controlled regression. The benchmark runner fails only when `actual` does not match the scenario's expected outcome.
 
-The baseline key is materialized as a directory:
+## Paper Artifact / Reproducibility Mode
+
+For reproducible paper artifacts, use `MockProvider` or `ReplayProvider` and commit only benchmark configs/fixtures, not generated `.costgate/` outputs. `ReplayProvider` accepts a previous fixture or run artifact containing `calls`, `per_call_runs`, `responses`, or `tasks` with output text, token counts, latency, retry count, and error state.
+
+Recommended paper artifact command:
+
 ```bash
-.costgate/baselines/<baseline_key>/baseline.json
+python -m pytest
+python benchmarks/costregbench/run.py --out .costgate/costregbench
 ```
 
-Costgate refuses to compare if the baseline family mismatches (model, suite, params, or rate-card changed), unless you pass `--allow-family-mismatch`.
+## Known Limitations
 
-## PR workflow
-In IC:
-- On `push` to `main`: run baseline and upload it as a GitHub Actions artifact (`costgate-baseline`).
-- On `pull_request`: download the latest baseline artifact from `main`, run the suite, compare, upload `report.md`, and fail the job on regressions.
-
-Locally you can mimic CI with:
-```bash
-chmod +x scripts/ci_run.sh
-scripts/ci_run.sh baseline
-scripts/ci_run.sh pr
-```
-
-## Determinisic harness defaults
-Costgate uses:
-- `temperature=0`
-- `top_p=1.0`
-- fixed `max_output_tokens` (default 96, configurable)
-- synthetic suite included in repo (`costgate/suites/demo_suite.yaml`)
-- repeats `N` configurable (default 7)
-
-## Measuring tokens at the paid boundary
-Per call:
-- Prefer token usafe returned by the provider API response
-- If missing, estimate with `tiktoken` and set 'token_source="estimated"`
-- Always record `token_source`
-
-## Policy tuning
-Policy lives in `costgate/policies/defualt.yaml`:
-
-Key knobs:
-- `metrics_to_gate`: list of metrics (v1 supports: `total_cost_usd`, `cost_per_success_usd`, `p50_latency_ms`, `p95_latency_ms`, `mean_input_tokens`, `mean_output_tokens`, `retry_rate`)
-- `regression_threshold_pct`: per-metric pratical thresholds (default 10%, retry default 25%)
-- `min_absolute_delta_usd`: absolute floor for cost metrics (default `1e-05`)
-- `alpha`: statistical significance (default 0.05)
-- `min_repeats`, `min_sample_size`: must be satisfied or compare errors
-- `variance_aware`: if enabled, effective threshold is: `max(user_threshold, k * baseline_std / baseline_mean)` with `k` default 3
-
-Gate triggers only if BOTH:
-- Practical threshold exceeded, AND
-- Mann-Whitney U one-sided test inidicates PR worse (p < alpha)
-
-Also reported: bootstrap CI for mean difference, and Cliff's delta effect size with CI.
-
-## Troubleshooting
-
-### "OPENAI_API_KEY is not set"
-Set:
-```bash
-export OPENAI_API_KEY="..."
-```
-
-### "No rate card rule matches resolved_model=..."
-Update `costgate/rate_cards/default.yaml` to include a matching `model_glob`, or run with:
-```bash
---allow-missing-rate
-```
-(then cost will be NaN and cost metrics are not meaningful)
-
-### "Baseline family mismatch
-This happens if you change suite, model, deterministic params, or rate card. Regenerate baseline:
-```bash
-costgate baseline ...
-```
-Or override (not recommended for CI):
-```bash
---allow-family-mismatch
-```
+- Statistical tests are intentionally simple and CI-oriented.
+- Cost is only as accurate as the selected rate card and provider token usage.
+- OpenAI pricing in the default rate card is illustrative and should be reviewed before production use.
+- Reports are Markdown artifacts, not dashboards.
+- Replay artifacts may contain output text; avoid sensitive suites unless you control artifact retention.

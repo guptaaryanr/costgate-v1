@@ -15,12 +15,14 @@ class SuiteTest:
     task_type: str
     system: str
     user: str
+    expected: Optional[Dict[str, Any]] = None
     meta: Optional[Dict[str, Any]] = None
 
 
 @dataclass(frozen=True)
 class Suite:
     tests: List[SuiteTest]
+    provider_config: Optional[Dict[str, Any]] = None
 
 
 def load_and_validate_suite(path: Path) -> Suite:
@@ -34,6 +36,12 @@ def load_and_validate_suite(path: Path) -> Suite:
     tests = obj.get("tests")
     if not isinstance(tests, list) or not tests:
         raise ValidationError("'tests' must be a non-empty list.")
+
+    provider_config = obj.get("provider_config")
+    if provider_config is not None and not isinstance(provider_config, dict):
+        raise ValidationError("provider_config must be a mapping when supplied.")
+
+    from costgate.validators import validate_expected_config
 
     seen = set()
     parsed: List[SuiteTest] = []
@@ -58,13 +66,23 @@ def load_and_validate_suite(path: Path) -> Suite:
         if not isinstance(user, str):
             raise ValidationError(f"Test {tid} missing string 'user'.")
 
+        expected = t.get("expected")
+        validate_expected_config(expected, tid)
+
         meta = {
-            k: v for k, v in t.items() if k not in {"id", "task_type", "system", "user"}
+            k: v
+            for k, v in t.items()
+            if k not in {"id", "task_type", "system", "user", "expected"}
         }
         parsed.append(
             SuiteTest(
-                id=tid, task_type=task_type, system=system, user=user, meta=meta or None
+                id=tid,
+                task_type=task_type,
+                system=system,
+                user=user,
+                expected=expected,
+                meta=meta or None,
             )
         )
 
-    return Suite(tests=parsed)
+    return Suite(tests=parsed, provider_config=provider_config)

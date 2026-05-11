@@ -1,0 +1,9 @@
+version: 1
+currency: USD
+rules:
+  - model_glob: "mock-cheap*"
+    input_usd_per_1k: 0.001
+    output_usd_per_1k: 0.002
+  - model_glob: "mock-expensive*"
+    input_usd_per_1k: 0.006
+    output_usd_per_1k: 0.012

@@ -1,0 +1,7 @@
+default:
+  output_text: "42"
+  resolved_model: mock-cheap
+  input_tokens: 20
+  output_tokens: 5
+  latency_ms: 20
+  token_source: mock

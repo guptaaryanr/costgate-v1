@@ -1,0 +1,8 @@
+tests:
+  - id: answer
+    task_type: qa
+    system: "Return only the answer."
+    user: "What is 40 + 2? Include your reasoning internally, but return only the answer."
+    expected:
+      type: exact
+      value: "42"

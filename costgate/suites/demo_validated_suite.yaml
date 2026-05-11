@@ -1,0 +1,39 @@
+# Small validated suite for local smoke tests and CI examples.
+tests:
+  - id: arithmetic_1
+    task_type: math
+    system: "Return only the final answer."
+    user: "Compute 1783 + 946 - 502."
+    expected:
+      type: exact
+      value: "2227"
+
+  - id: extract_invoice_total
+    task_type: extraction
+    system: "Return only compact JSON."
+    user: "Invoice total: $123.45. Extract the total."
+    expected:
+      type: json_schema
+      schema:
+        type: object
+        required: ["total"]
+        properties:
+          total:
+            type: string
+
+  - id: classification_1
+    task_type: classification
+    system: "Classify sentiment as positive, neutral, or negative. Output only the label."
+    user: "The update is fine, nothing special."
+    expected:
+      type: exact
+      value: "neutral"
+
+  - id: numeric_1
+    task_type: math
+    system: "Return only the final numeric answer."
+    user: "What is 10.0 divided by 4?"
+    expected:
+      type: numeric_tolerance
+      value: 2.5
+      tolerance: 0.001

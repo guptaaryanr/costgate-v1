@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import yaml
+
+from costgate.jsonutil import dumps_json
 
 
 class BaselineFamilyMismatchError(RuntimeError):
@@ -49,17 +50,22 @@ def build_baseline_key(
     resolved_model: str,
     params_hash: str,
     rate_card_hash: str,
+    artifact_schema: str | None = None,
+    tokenizer: str | None = None,
 ) -> str:
     # Keep it deterministic and readable, but still unique.
-    return "__".join(
-        [
-            suite_hash,
-            provider,
-            safe_model_for_path(resolved_model),
-            params_hash,
-            rate_card_hash,
-        ]
-    )
+    parts = [
+        suite_hash,
+        provider,
+        safe_model_for_path(resolved_model),
+        params_hash,
+        rate_card_hash,
+    ]
+    if tokenizer:
+        parts.append(safe_model_for_path(tokenizer))
+    if artifact_schema:
+        parts.append(safe_model_for_path(artifact_schema))
+    return "__".join(parts)
 
 
 def baseline_path_for_key(baselines_root: Path, baseline_key: str) -> Path:
@@ -72,7 +78,7 @@ def save_baseline(
     baseline_key = results["meta"]["baseline_key"]
     path = baseline_path_for_key(baselines_root, baseline_key)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(results, indent=2, sort_keys=True), encoding="utf-8")
+    path.write_text(dumps_json(results, indent=2, sort_keys=True), encoding="utf-8")
     return path
 
 
@@ -99,8 +105,11 @@ def find_latest_baseline_json(baselines_root: Path) -> Optional[Path]:
 def assert_same_family(baseline: Dict[str, Any], pr: Dict[str, Any]) -> None:
     b = baseline.get("meta", {})
     p = pr.get("meta", {})
-    # Family identity is the tuple (suite_hash, provider, resolved_model, params_hash, rate_card_hash)
     keys = ["suite_hash", "provider", "resolved_model", "params_hash", "rate_card_hash"]
+    if b.get("schema_version") or p.get("schema_version"):
+        keys.append("schema_version")
+    if b.get("tokenizer") or p.get("tokenizer"):
+        keys.append("tokenizer")
     mismatches = []
     for k in keys:
         if b.get(k) != p.get(k):

@@ -1,22 +1,43 @@
 version: 1
 
-metrics_to_gate:
-  - total_cost_usd
-  - cost_per_success_usd
-  - p95_latency_ms
-  - mean_output_tokens
-  - retry_rate
+# v1 policy gates are explicit about metric direction and severity.
+gates:
+  cost_per_valid_success_usd:
+    direction: higher_is_worse
+    max_relative_increase: 0.10
+    min_absolute_delta_usd: 0.00005
+    statistical_test: mann_whitney
+    alpha: 0.05
+    severity: fail
 
-# Default practical threshold: 10%
-regression_threshold_pct:
-  total_cost_usd: 10
-  cost_per_success_usd: 10
-  p95_latency_ms: 10
-  mean_output_tokens: 10
-  retry_rate: 25
+  task_success_rate:
+    direction: lower_is_worse
+    min_absolute_value: 0.95
+    max_relative_decrease: 0.05
+    statistical_test: mann_whitney
+    alpha: 0.05
+    severity: fail
 
-# Cost deltas must clear a tiny absolute floor, not cents.
-min_absolute_delta_usd: 1.0e-05
+  p95_latency_ms:
+    direction: higher_is_worse
+    max_relative_increase: 0.50
+    statistical_test: mann_whitney
+    alpha: 0.05
+    severity: warn
+
+  mean_output_tokens:
+    direction: higher_is_worse
+    max_relative_increase: 0.25
+    statistical_test: mann_whitney
+    alpha: 0.05
+    severity: warn
+
+  retry_rate:
+    direction: higher_is_worse
+    max_relative_increase: 0.25
+    statistical_test: mann_whitney
+    alpha: 0.05
+    severity: warn
 
 alpha: 0.05
 min_repeats: 5

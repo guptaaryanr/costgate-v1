@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from openai import OpenAI
 from openai import (
@@ -32,7 +32,21 @@ class OpenAIProviderConfig:
 class OpenAIProvider(Provider):
     name = "openai"
 
-    def __init__(self, cfg: Optional[OpenAIProviderConfig] = None) -> None:
+    def __init__(
+        self,
+        cfg: Optional[OpenAIProviderConfig] = None,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        if config:
+            cfg = OpenAIProviderConfig(
+                max_retries=int(config.get("max_retries", OpenAIProviderConfig.max_retries)),
+                backoff_base_s=float(
+                    config.get("backoff_base_s", OpenAIProviderConfig.backoff_base_s)
+                ),
+                backoff_max_s=float(
+                    config.get("backoff_max_s", OpenAIProviderConfig.backoff_max_s)
+                ),
+            )
         self.cfg = cfg or OpenAIProviderConfig()
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:

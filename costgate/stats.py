@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 
@@ -37,8 +36,8 @@ def mann_whitney_u_greater(x: List[float], y: List[float]) -> Dict[str, float]:
     Uses normal approximation with tie correction.
     Returns: U, z, p_value
     """
-    x = [float(v) for v in x if not math.isnan(float(v))]
-    y = [float(v) for v in y if not math.isnan(float(v))]
+    x = [float(v) for v in x if math.isfinite(float(v))]
+    y = [float(v) for v in y if math.isfinite(float(v))]
     if len(x) == 0 or len(y) == 0:
         return {"u": float("nan"), "z": float("nan"), "p_value": float("nan")}
 
@@ -77,8 +76,8 @@ def bootstrap_ci_mean_diff(
     """
     Bootstrap percentile CI for mean(pr) - mean(baseline).
     """
-    b = np.array([float(v) for v in baseline if not math.isnan(float(v))], dtype=float)
-    p = np.array([float(v) for v in pr if not math.isnan(float(v))], dtype=float)
+    b = np.array([float(v) for v in baseline if math.isfinite(float(v))], dtype=float)
+    p = np.array([float(v) for v in pr if math.isfinite(float(v))], dtype=float)
     if len(b) == 0 or len(p) == 0:
         return {
             "mean_diff": float("nan"),
@@ -104,8 +103,8 @@ def cliffs_delta(baseline: List[float], pr: List[float]) -> float:
     """
     Cliff's delta for PR vs baseline: + means PR tends larger (worse for gated metrics).
     """
-    b = [float(v) for v in baseline if not math.isnan(float(v))]
-    p = [float(v) for v in pr if not math.isnan(float(v))]
+    b = [float(v) for v in baseline if math.isfinite(float(v))]
+    p = [float(v) for v in pr if math.isfinite(float(v))]
     if not b or not p:
         return float("nan")
 
@@ -128,8 +127,8 @@ def bootstrap_ci_cliffs_delta(
     n_boot: int = 8000,
     seed: int = 1,
 ) -> Dict[str, float]:
-    b = np.array([float(v) for v in baseline if not math.isnan(float(v))], dtype=float)
-    p = np.array([float(v) for v in pr if not math.isnan(float(v))], dtype=float)
+    b = np.array([float(v) for v in baseline if math.isfinite(float(v))], dtype=float)
+    p = np.array([float(v) for v in pr if math.isfinite(float(v))], dtype=float)
     if len(b) == 0 or len(p) == 0:
         return {"delta": float("nan"), "ci_low": float("nan"), "ci_high": float("nan")}
 

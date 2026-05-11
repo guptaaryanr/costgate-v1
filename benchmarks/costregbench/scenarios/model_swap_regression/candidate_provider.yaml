@@ -1,0 +1,7 @@
+default:
+  output_text: "42"
+  resolved_model: mock-expensive
+  input_tokens: 20
+  output_tokens: 5
+  latency_ms: 22
+  token_source: mock

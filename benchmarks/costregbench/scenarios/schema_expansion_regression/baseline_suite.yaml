@@ -1,0 +1,13 @@
+tests:
+  - id: invoice
+    task_type: extraction
+    system: "Return compact JSON."
+    user: "Invoice total: $123.45."
+    expected:
+      type: json_schema
+      schema:
+        type: object
+        required: ["total"]
+        properties:
+          total:
+            type: string

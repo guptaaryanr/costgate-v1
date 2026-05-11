@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import typer
+import yaml
 
 from costgate.baselines import (
     BaselineFamilyMismatchError,
-    build_baseline_key,
     find_latest_baseline_json,
     load_json,
     save_baseline,
 )
 from costgate.compare import CompareError, compare_results_and_gate
+from costgate.jsonutil import dumps_json
 from costgate.report import write_markdown_report
 from costgate.run import RunError, run_suite
 from costgate.suites import load_and_validate_suite
@@ -28,10 +28,24 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
+def _load_provider_config(path: Optional[Path]) -> Dict[str, Any]:
+    if path is None:
+        return {}
+    try:
+        obj = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        raise typer.BadParameter(f"Failed to parse provider config: {e}") from e
+    if obj is None:
+        return {}
+    if not isinstance(obj, dict):
+        raise typer.BadParameter("Provider config must be a YAML mapping.")
+    return obj
+
+
 @app.command()
 def validate(
     suite: Path = typer.Option(
-        Path("costgate/suites/demo_suite.yaml"), help="Suite YAML path"
+        Path("costgate/suites/demo_validated_suite.yaml"), help="Suite YAML path"
     ),
     rate_card: Path = typer.Option(
         Path("costgate/rate_cards/default.yaml"), help="Rate card YAML path"
@@ -51,10 +65,10 @@ def validate(
 
 @app.command()
 def run(
-    provider: str = typer.Option("openai", help="Provider name (currently: openai)"),
+    provider: str = typer.Option("openai", help="Provider name: openai, mock, or replay"),
     model: str = typer.Option("gpt-4o-mini", help="Requested model"),
     suite: Path = typer.Option(
-        Path("costgate/suites/demo_suite.yaml"), help="Suite YAML path"
+        Path("costgate/suites/demo_validated_suite.yaml"), help="Suite YAML path"
     ),
     rate_card: Path = typer.Option(
         Path("costgate/rate_cards/default.yaml"), help="Rate card YAML path"
@@ -70,6 +84,9 @@ def run(
         False, help="If set, allow missing rate card match (cost=NaN)"
     ),
     timeout_s: float = typer.Option(60.0, help="Per-request timeout seconds"),
+    provider_config: Optional[Path] = typer.Option(
+        None, help="Optional provider config YAML path"
+    ),
 ) -> None:
     """
     Run the deterministic harness and write results.json (no comparison).
@@ -90,9 +107,10 @@ def run(
             max_output_tokens=max_output_tokens,
             allow_missing_rate=allow_missing_rate,
             timeout_s=timeout_s,
+            provider_config=_load_provider_config(provider_config),
         )
         _ensure_parent(out)
-        out.write_text(json.dumps(results, indent=2, sort_keys=True), encoding="utf-8")
+        out.write_text(dumps_json(results, indent=2, sort_keys=True), encoding="utf-8")
         typer.echo(f"Wrote results: {out}")
         typer.echo(f"Baseline family key: {results['meta']['baseline_key']}")
     except RunError as e:
@@ -102,13 +120,12 @@ def run(
         typer.echo(f"ERROR: {e}", err=True)
         raise typer.Exit(code=1) from e
 
-
 @app.command()
 def baseline(
-    provider: str = typer.Option("openai", help="Provider name (currently: openai)"),
+    provider: str = typer.Option("openai", help="Provider name: openai, mock, or replay"),
     model: str = typer.Option("gpt-4o-mini", help="Requested model"),
     suite: Path = typer.Option(
-        Path("costgate/suites/demo_suite.yaml"), help="Suite YAML path"
+        Path("costgate/suites/demo_validated_suite.yaml"), help="Suite YAML path"
     ),
     rate_card: Path = typer.Option(
         Path("costgate/rate_cards/default.yaml"), help="Rate card YAML path"
@@ -127,6 +144,9 @@ def baseline(
         False, help="If set, allow missing rate card match (cost=NaN)"
     ),
     timeout_s: float = typer.Option(60.0, help="Per-request timeout seconds"),
+    provider_config: Optional[Path] = typer.Option(
+        None, help="Optional provider config YAML path"
+    ),
 ) -> None:
     """
     Run and save a baseline under .costgate/baselines/<baseline_key>/baseline.json
@@ -147,9 +167,10 @@ def baseline(
             max_output_tokens=max_output_tokens,
             allow_missing_rate=allow_missing_rate,
             timeout_s=timeout_s,
+            provider_config=_load_provider_config(provider_config),
         )
         _ensure_parent(out)
-        out.write_text(json.dumps(results, indent=2, sort_keys=True), encoding="utf-8")
+        out.write_text(dumps_json(results, indent=2, sort_keys=True), encoding="utf-8")
         baseline_path = save_baseline(results, baselines_root=baselines_root)
         latest_key_path = baselines_root.parent / "latest_baseline_key.txt"
         _ensure_parent(latest_key_path)
@@ -165,7 +186,6 @@ def baseline(
     except Exception as e:
         typer.echo(f"ERROR: {e}", err=True)
         raise typer.Exit(code=1) from e
-
 
 @app.command()
 def compare(
@@ -229,11 +249,10 @@ def compare(
             policy=policy_obj,
             allow_family_mismatch=allow_family_mismatch,
         )
+        cmp["report_path"] = str(report_out)
 
         _ensure_parent(compare_out)
-        compare_out.write_text(
-            json.dumps(cmp, indent=2, sort_keys=True), encoding="utf-8"
-        )
+        compare_out.write_text(dumps_json(cmp, indent=2, sort_keys=True), encoding="utf-8")
 
         md = write_markdown_report(cmp)
         _ensure_parent(report_out)
@@ -244,7 +263,7 @@ def compare(
         typer.echo(f"Wrote compare JSON: {compare_out}")
         typer.echo(f"Wrote report: {report_out}")
 
-        if verdict == "regression" and exit_on_regression:
+        if verdict == "fail" and exit_on_regression:
             raise typer.Exit(code=2)
     except BaselineFamilyMismatchError as e:
         typer.echo(f"ERROR: {e}", err=True)
@@ -260,3 +279,7 @@ def compare(
     except Exception as e:
         typer.echo(f"ERROR: {e}", err=True)
         raise typer.Exit(code=1) from e
+
+
+if __name__ == "__main__":
+    app()

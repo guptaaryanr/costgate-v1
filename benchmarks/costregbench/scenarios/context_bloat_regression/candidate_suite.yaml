@@ -1,0 +1,8 @@
+tests:
+  - id: answer
+    task_type: qa
+    system: "Return only the answer."
+    user: "Read the long context, then answer: What is 40 + 2?"
+    expected:
+      type: exact
+      value: "42"

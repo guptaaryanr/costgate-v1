@@ -1,22 +1,33 @@
-# Local secrets
+# Runtime artifacts
+.costgate/
+costgate-output/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local environment and secrets
 .env
 .env.*
 !.env.example
+*.pem
+*.key
 
-# Local Python artifacts
-.venv
-*__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-build/
-dist/
-*.egg-info/
-
-# Generated costgate run outputs
-.costgate/
+# Editor/OS noise
+.DS_Store
+.idea/
+.vscode/

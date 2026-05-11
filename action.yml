@@ -1,0 +1,97 @@
+name: Costgate
+description: CI-native LLM inference cost regression gate
+
+inputs:
+  suite-path:
+    description: Suite YAML path
+    required: false
+    default: costgate/suites/demo_validated_suite.yaml
+  baseline-path:
+    description: Baseline run artifact path. If empty, only a candidate run is produced.
+    required: false
+    default: ""
+  policy-path:
+    description: Policy YAML path
+    required: false
+    default: costgate/policies/default.yaml
+  rate-card-path:
+    description: Rate card YAML path
+    required: false
+    default: costgate/rate_cards/default.yaml
+  provider:
+    description: Provider name, for example openai, mock, or replay
+    required: false
+    default: openai
+  model:
+    description: Requested model name
+    required: false
+    default: gpt-4o-mini
+  provider-config:
+    description: Optional provider config YAML path
+    required: false
+    default: ""
+  output-dir:
+    description: Directory for candidate, comparison, and report artifacts
+    required: false
+    default: .costgate
+  repeats:
+    description: Repeat count
+    required: false
+    default: "7"
+  max-output-tokens:
+    description: Fixed max output tokens
+    required: false
+    default: "96"
+  fail-on-regression:
+    description: Fail the job when Costgate returns an overall FAIL verdict
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Install Costgate
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install .
+
+    - name: Run Costgate
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "${{ inputs.output-dir }}"
+
+        PROVIDER_CONFIG_ARGS=()
+        if [[ -n "${{ inputs.provider-config }}" ]]; then
+          PROVIDER_CONFIG_ARGS=(--provider-config "${{ inputs.provider-config }}")
+        fi
+
+        python -m costgate.cli validate \
+          --suite "${{ inputs.suite-path }}" \
+          --rate-card "${{ inputs.rate-card-path }}" \
+          --policy "${{ inputs.policy-path }}"
+
+        python -m costgate.cli run \
+          --provider "${{ inputs.provider }}" \
+          --model "${{ inputs.model }}" \
+          --suite "${{ inputs.suite-path }}" \
+          --rate-card "${{ inputs.rate-card-path }}" \
+          --repeats "${{ inputs.repeats }}" \
+          --max-output-tokens "${{ inputs.max-output-tokens }}" \
+          --out "${{ inputs.output-dir }}/candidate.json" \
+          "${PROVIDER_CONFIG_ARGS[@]}"
+
+        if [[ -n "${{ inputs.baseline-path }}" ]]; then
+          EXIT_FLAG="--exit-on-regression"
+          if [[ "${{ inputs.fail-on-regression }}" != "true" ]]; then
+            EXIT_FLAG="--no-exit-on-regression"
+          fi
+          python -m costgate.cli compare \
+            --pr-results "${{ inputs.output-dir }}/candidate.json" \
+            --baseline-json "${{ inputs.baseline-path }}" \
+            --policy "${{ inputs.policy-path }}" \
+            --report-out "${{ inputs.output-dir }}/report.md" \
+            --compare-out "${{ inputs.output-dir }}/compare.json" \
+            "${EXIT_FLAG}"
+        fi

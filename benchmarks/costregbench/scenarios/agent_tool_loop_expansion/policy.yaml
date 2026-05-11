@@ -1,0 +1,17 @@
+version: 1
+gates:
+  cost_per_valid_success_usd:
+    direction: higher_is_worse
+    max_relative_increase: 0.10
+    min_absolute_delta_usd: 0.0
+    statistical_test: none
+    severity: fail
+  retry_rate:
+    direction: higher_is_worse
+    max_relative_increase: 0.10
+    statistical_test: none
+    severity: warn
+min_repeats: 5
+min_sample_size: 5
+variance_aware:
+  enabled: false
