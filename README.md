@@ -71,6 +71,12 @@ For development:
 python -m pip install -e '.[dev]'
 ```
 
+For test-only installs:
+
+```bash
+python -m pip install -e '.[test]'
+```
+
 For development plus optional OpenAI provider checks:
 
 ```bash
