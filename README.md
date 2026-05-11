@@ -71,6 +71,12 @@ For development:
 python -m pip install -e '.[dev]'
 ```
 
+For development plus optional OpenAI provider checks:
+
+```bash
+python -m pip install -e '.[dev,openai]'
+```
+
 ## Quickstart With ReplayProvider
 
 ReplayProvider reuses a prior run artifact or fixture:
@@ -237,6 +243,8 @@ The runner writes `summary.csv` and `summary.md` to the output directory with ex
 ## Paper Artifact / Reproducibility Mode
 
 For reproducible paper artifacts, use `MockProvider` or `ReplayProvider` and commit only benchmark configs/fixtures, not generated `.costgate/` outputs. `ReplayProvider` accepts a previous fixture or run artifact containing `calls`, `per_call_runs`, `responses`, or `tasks` with output text, token counts, latency, retry count, and error state.
+
+See `docs/paper-artifact.md` for deterministic reproduction instructions.
 
 Recommended paper artifact command:
 
