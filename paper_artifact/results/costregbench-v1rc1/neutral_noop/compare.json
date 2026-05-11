@@ -1,0 +1,355 @@
+{
+  "baseline": {
+    "baseline_key": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06__mock__mock-cheap__34b9a03584c06a503521bca2be1ec3cad36cb4d6e0a36e5f7ae451903ee57548__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1",
+    "params_hash": "34b9a03584c06a503521bca2be1ec3cad36cb4d6e0a36e5f7ae451903ee57548",
+    "pricing_version": 1,
+    "provider": "mock",
+    "rate_card_hash": "068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2",
+    "repeats": 5,
+    "requested_model": "mock-cheap",
+    "resolved_model": "mock-cheap",
+    "run_id": "run_20260511T132946Z_7c68a56aea",
+    "schema_version": "costgate.run.v1",
+    "suite_hash": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06",
+    "timestamp": "2026-05-11T13:29:46Z",
+    "tokenizer": "provider_usage_or_costgate_estimator_v1"
+  },
+  "candidate": {
+    "baseline_key": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06__mock__mock-cheap__34b9a03584c06a503521bca2be1ec3cad36cb4d6e0a36e5f7ae451903ee57548__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1",
+    "params_hash": "34b9a03584c06a503521bca2be1ec3cad36cb4d6e0a36e5f7ae451903ee57548",
+    "pricing_version": 1,
+    "provider": "mock",
+    "rate_card_hash": "068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2",
+    "repeats": 5,
+    "requested_model": "mock-cheap",
+    "resolved_model": "mock-cheap",
+    "run_id": "run_20260511T132946Z_b7b5fd33c7",
+    "schema_version": "costgate.run.v1",
+    "suite_hash": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06",
+    "timestamp": "2026-05-11T13:29:46Z",
+    "tokenizer": "provider_usage_or_costgate_estimator_v1"
+  },
+  "compared_metrics": [
+    "cost_per_valid_success_usd",
+    "task_success_rate"
+  ],
+  "costgate_version": "1.0.0rc1",
+  "drivers": {
+    "baseline_means": {
+      "cost_per_valid_success_usd": 1.4000000000000001e-05,
+      "estimated_token_fraction": 0.0,
+      "mean_input_tokens": 10.0,
+      "mean_output_tokens": 2.0,
+      "p95_latency_ms": 20.0,
+      "retry_rate": 0.0,
+      "task_success_rate": 1.0
+    },
+    "candidate_means": {
+      "cost_per_valid_success_usd": 1.4000000000000001e-05,
+      "estimated_token_fraction": 0.0,
+      "mean_input_tokens": 10.0,
+      "mean_output_tokens": 2.0,
+      "p95_latency_ms": 20.0,
+      "retry_rate": 0.0,
+      "task_success_rate": 1.0
+    },
+    "hints": []
+  },
+  "metrics": {
+    "cost_per_valid_success_usd": {
+      "delta": {
+        "absolute": 0.0,
+        "pct": 0.0,
+        "worse_delta": 0.0
+      },
+      "direction": "higher_is_worse",
+      "gate": {
+        "practical_exceeded": false,
+        "statistically_worse": true,
+        "triggered": false
+      },
+      "means": {
+        "baseline": 1.4000000000000001e-05,
+        "candidate": 1.4000000000000001e-05,
+        "pr": 1.4000000000000001e-05
+      },
+      "metric": "cost_per_valid_success_usd",
+      "practical": {
+        "baseline_mean": 1.4000000000000001e-05,
+        "candidate_mean": 1.4000000000000001e-05,
+        "checks": {
+          "relative": false
+        },
+        "delta": 0.0,
+        "delta_pct": 0.0,
+        "exceeds_threshold": false,
+        "insufficient_data": false,
+        "reasons": [
+          "below_relative_threshold"
+        ],
+        "relative_threshold_details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "relative_threshold_frac": 0.1,
+        "worse_delta": 0.0
+      },
+      "samples": {
+        "baseline": [
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05
+        ],
+        "candidate": [
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05
+        ],
+        "pr": [
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05,
+          1.4000000000000001e-05
+        ]
+      },
+      "severity": "fail",
+      "stats": {
+        "alpha": 0.05,
+        "bootstrap_mean_diff_ci": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean_diff": 0.0
+        },
+        "bootstrap_oriented_mean_diff_ci": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean_diff": 0.0
+        },
+        "effect_size": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "delta": 0.0
+        },
+        "insufficient_data": false,
+        "mann_whitney_u": null,
+        "statistically_worse": true,
+        "test": "none"
+      },
+      "threshold": {
+        "details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "effective_pct": 10.0,
+        "max_absolute_value": null,
+        "min_absolute_delta_usd": 0.0,
+        "min_absolute_value": null
+      },
+      "verdict": "pass"
+    },
+    "task_success_rate": {
+      "delta": {
+        "absolute": 0.0,
+        "pct": 0.0,
+        "worse_delta": -0.0
+      },
+      "direction": "lower_is_worse",
+      "gate": {
+        "practical_exceeded": false,
+        "statistically_worse": true,
+        "triggered": false
+      },
+      "means": {
+        "baseline": 1.0,
+        "candidate": 1.0,
+        "pr": 1.0
+      },
+      "metric": "task_success_rate",
+      "practical": {
+        "baseline_mean": 1.0,
+        "candidate_mean": 1.0,
+        "checks": {
+          "min_absolute_value": false
+        },
+        "delta": 0.0,
+        "delta_pct": 0.0,
+        "exceeds_threshold": false,
+        "insufficient_data": false,
+        "reasons": [
+          "above_min_absolute_value"
+        ],
+        "relative_threshold_details": {
+          "configured_fraction": null
+        },
+        "relative_threshold_frac": null,
+        "worse_delta": -0.0
+      },
+      "samples": {
+        "baseline": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "candidate": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "pr": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "severity": "fail",
+      "stats": {
+        "alpha": 0.05,
+        "bootstrap_mean_diff_ci": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean_diff": 0.0
+        },
+        "bootstrap_oriented_mean_diff_ci": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "mean_diff": 0.0
+        },
+        "effect_size": {
+          "ci_high": 0.0,
+          "ci_low": 0.0,
+          "delta": 0.0
+        },
+        "insufficient_data": false,
+        "mann_whitney_u": null,
+        "statistically_worse": true,
+        "test": "none"
+      },
+      "threshold": {
+        "details": {
+          "configured_fraction": null
+        },
+        "effective_pct": null,
+        "max_absolute_value": null,
+        "min_absolute_delta_usd": null,
+        "min_absolute_value": 1.0
+      },
+      "verdict": "pass"
+    }
+  },
+  "overall_verdict": "pass",
+  "per_metric_verdicts": {
+    "cost_per_valid_success_usd": "pass",
+    "task_success_rate": "pass"
+  },
+  "policy_hash": "e0845f9b19197b902660e78a05c7cc3934478f23e97cf551b32e67cecf45d52d",
+  "policy_used": {
+    "alpha": 0.05,
+    "gates": {
+      "cost_per_valid_success_usd": {
+        "alpha": 0.05,
+        "direction": "higher_is_worse",
+        "max_absolute_value": null,
+        "max_relative_decrease": null,
+        "max_relative_increase": 0.1,
+        "metric": "cost_per_valid_success_usd",
+        "min_absolute_delta_usd": 0.0,
+        "min_absolute_value": null,
+        "severity": "fail",
+        "statistical_test": "none"
+      },
+      "task_success_rate": {
+        "alpha": 0.05,
+        "direction": "lower_is_worse",
+        "max_absolute_value": null,
+        "max_relative_decrease": null,
+        "max_relative_increase": null,
+        "metric": "task_success_rate",
+        "min_absolute_delta_usd": null,
+        "min_absolute_value": 1.0,
+        "severity": "fail",
+        "statistical_test": "none"
+      }
+    },
+    "metrics_to_gate": [
+      "cost_per_valid_success_usd",
+      "task_success_rate"
+    ],
+    "min_absolute_delta_usd": 1e-05,
+    "min_repeats": 5,
+    "min_sample_size": 5,
+    "regression_threshold_pct": {
+      "cost_per_valid_success_usd": 10.0
+    },
+    "variance_aware": {
+      "enabled": false,
+      "k": 3.0
+    },
+    "version": 1
+  },
+  "report_path": "paper_artifact/results/costregbench-v1rc1/neutral_noop/report.md",
+  "schema_version": "costgate.compare.v1",
+  "statistical_results": {
+    "cost_per_valid_success_usd": {
+      "alpha": 0.05,
+      "bootstrap_mean_diff_ci": {
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "mean_diff": 0.0
+      },
+      "bootstrap_oriented_mean_diff_ci": {
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "mean_diff": 0.0
+      },
+      "effect_size": {
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "delta": 0.0
+      },
+      "insufficient_data": false,
+      "mann_whitney_u": null,
+      "statistically_worse": true,
+      "test": "none"
+    },
+    "task_success_rate": {
+      "alpha": 0.05,
+      "bootstrap_mean_diff_ci": {
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "mean_diff": 0.0
+      },
+      "bootstrap_oriented_mean_diff_ci": {
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "mean_diff": 0.0
+      },
+      "effect_size": {
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "delta": 0.0
+      },
+      "insufficient_data": false,
+      "mann_whitney_u": null,
+      "statistically_worse": true,
+      "test": "none"
+    }
+  },
+  "verdict": {
+    "failures": [],
+    "insufficient_data": [],
+    "regressions": [],
+    "status": "pass",
+    "warnings": []
+  }
+}
