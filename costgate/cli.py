@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 import typer
 import yaml
 
+from costgate import __version__
 from costgate.baselines import (
     BaselineFamilyMismatchError,
     find_latest_baseline_json,
@@ -40,6 +41,12 @@ def _load_provider_config(path: Optional[Path]) -> Dict[str, Any]:
     if not isinstance(obj, dict):
         raise typer.BadParameter("Provider config must be a YAML mapping.")
     return obj
+
+
+@app.command()
+def version() -> None:
+    """Print the Costgate package version."""
+    typer.echo(__version__)
 
 
 @app.command()

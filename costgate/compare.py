@@ -8,7 +8,7 @@ import numpy as np
 
 from costgate import __version__
 from costgate.artifacts import COMPARISON_SCHEMA_VERSION
-from costgate.baselines import assert_same_family
+from costgate.baselines import assert_same_family, canonical_hash_json_obj
 from costgate.jsonutil import coerce_float
 from costgate.stats import (
     bootstrap_ci_cliffs_delta,
@@ -229,6 +229,19 @@ def _statistical_check(
             "insufficient_data": True,
         }
 
+    if gate.statistical_test == "bootstrap":
+        ci_low = coerce_float(oriented_ci.get("ci_low"))
+        return {
+            "alpha": alpha,
+            "test": "bootstrap",
+            "mann_whitney_u": None,
+            "bootstrap_mean_diff_ci": raw_ci,
+            "bootstrap_oriented_mean_diff_ci": oriented_ci,
+            "effect_size": effect,
+            "statistically_worse": bool(math.isfinite(ci_low) and ci_low > 0.0),
+            "insufficient_data": False,
+        }
+
     mw = mann_whitney_u_greater(c_oriented, b_oriented)
     p_value = coerce_float(mw.get("p_value"))
     return {
@@ -252,12 +265,14 @@ def compare_results_and_gate(
     if not allow_family_mismatch:
         assert_same_family(baseline, pr)
 
+    policy_dict = asdict(policy)
     results: Dict[str, Any] = {
         "schema_version": COMPARISON_SCHEMA_VERSION,
         "costgate_version": __version__,
         "baseline": _run_metadata(baseline),
         "candidate": _run_metadata(pr),
-        "policy_used": asdict(policy),
+        "policy_used": policy_dict,
+        "policy_hash": canonical_hash_json_obj(policy_dict),
         "compared_metrics": list(policy.gates),
         "metrics": {},
         "statistical_results": {},
@@ -429,6 +444,13 @@ def _driver_hints(baseline: Dict[str, Any], pr: Dict[str, Any]) -> Dict[str, Any
             f"Estimated token fraction increase: estimated_token_fraction {b_est:.2f} -> {c_est:.2f}."
         )
 
+    candidate_calls = pr.get("calls") or pr.get("per_call_runs") or []
+    estimated_calls = [c for c in candidate_calls if c.get("token_source") == "estimated"]
+    if estimated_calls:
+        hints.append(
+            f"Token-source warning: {len(estimated_calls)}/{len(candidate_calls)} candidate calls use estimated token counts."
+        )
+
     if math.isfinite(b_p95) and math.isfinite(c_p95) and c_p95 > b_p95 * 1.10:
         hints.append(f"Latency noise/increase: p95_latency_ms {b_p95:.0f} -> {c_p95:.0f}.")
 
@@ -439,7 +461,6 @@ def _driver_hints(baseline: Dict[str, Any], pr: Dict[str, Any]) -> Dict[str, Any
     if b_meta.get("rate_card_hash") != c_meta.get("rate_card_hash"):
         hints.append("Rate card mismatch: baseline and candidate rate card hashes differ.")
 
-    candidate_calls = pr.get("calls") or pr.get("per_call_runs") or []
     no_validator = [
         c.get("task_id") or c.get("test_id")
         for c in candidate_calls

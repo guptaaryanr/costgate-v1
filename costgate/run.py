@@ -25,6 +25,8 @@ from costgate.validation import (
 )
 from costgate.validators import validate_output
 
+TOKEN_ESTIMATOR = "provider_usage_or_costgate_estimator_v1"
+
 
 class RunError(RuntimeError):
     def __init__(self, message: str, exit_code: int = 1) -> None:
@@ -284,7 +286,8 @@ def run_suite(
         "rate_input_usd_per_1k": in_per_1k_final,
         "rate_output_usd_per_1k": out_per_1k_final,
         "pricing_version": card.version,
-        "tokenizer": None,
+        "tokenizer": TOKEN_ESTIMATOR,
+        "token_estimator_version": TOKEN_ESTIMATOR,
         "started_at": started_at,
         "ended_at": ended_at,
         "timestamp": started_at,
@@ -307,6 +310,8 @@ def run_suite(
         "params_hash": params_hash,
         "rate_card_hash": rate_card_hash,
         "pricing_version": card.version,
+        "tokenizer": TOKEN_ESTIMATOR,
+        "token_estimator_version": TOKEN_ESTIMATOR,
         "token_source": token_source_summary,
         "meta": meta,
         "calls": per_call_runs,

@@ -31,3 +31,15 @@ jobs:
 ```
 
 For deterministic no-key CI smoke tests, use `provider: mock` with a checked-in provider config.
+
+Local validation helpers:
+
+```bash
+bash scripts/release_check.sh
+```
+
+If installed, run `actionlint` before release:
+
+```bash
+actionlint
+```

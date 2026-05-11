@@ -18,7 +18,7 @@ The primary v1 metric is `cost_per_valid_success_usd`, meaning cost per task-val
 No API key or network call is required:
 
 ```bash
-python -m pip install -e .[test]
+python -m pip install -e .
 
 cat > /tmp/costgate-mock.yaml <<'YAML'
 default:
@@ -51,6 +51,7 @@ python -m costgate.cli run \
 ## Quickstart With OpenAI
 
 ```bash
+python -m pip install -e '.[openai]'
 export OPENAI_API_KEY="..."
 
 python -m costgate.cli baseline \
@@ -63,6 +64,33 @@ python -m costgate.cli baseline \
 ```
 
 OpenAI dependencies are loaded lazily, so importing the CLI or running mock/replay tests does not require an API key.
+
+For development:
+
+```bash
+python -m pip install -e '.[dev]'
+```
+
+## Quickstart With ReplayProvider
+
+ReplayProvider reuses a prior run artifact or fixture:
+
+```bash
+python -m costgate.cli run \
+  --provider replay \
+  --model mock-cheap \
+  --suite costgate/suites/demo_validated_suite.yaml \
+  --rate-card benchmarks/costregbench/rate_card.yaml \
+  --provider-config replay-provider.yaml \
+  --repeats 5 \
+  --out .costgate/replay-results.json
+```
+
+where `replay-provider.yaml` contains:
+
+```yaml
+fixture_path: .costgate/mock-baseline.json
+```
 
 ## Baseline And Candidate Workflow
 
@@ -204,6 +232,8 @@ python benchmarks/costregbench/run.py --scenario neutral_noop
 
 Some scenarios should report `actual=fail` or `actual=warn`; that means Costgate correctly detected the controlled regression. The benchmark runner fails only when `actual` does not match the scenario's expected outcome.
 
+The runner writes `summary.csv` and `summary.md` to the output directory with expected vs observed verdicts, false-positive/false-negative markers, and major metric deltas.
+
 ## Paper Artifact / Reproducibility Mode
 
 For reproducible paper artifacts, use `MockProvider` or `ReplayProvider` and commit only benchmark configs/fixtures, not generated `.costgate/` outputs. `ReplayProvider` accepts a previous fixture or run artifact containing `calls`, `per_call_runs`, `responses`, or `tasks` with output text, token counts, latency, retry count, and error state.
@@ -217,6 +247,12 @@ python benchmarks/costregbench/run.py --out .costgate/costregbench
 
 ## Known Limitations
 
+- Costgate is not a hosted observability platform.
+- Costgate is not a semantic quality benchmark by itself; validators define task success for each suite.
+- Real provider runs may still be stochastic despite deterministic request parameters.
+- Latency is noisy and should usually be reported or warned, not hard-gated.
+- Provider-reported token usage is preferred over local estimates; estimated token usage is marked in artifacts and reports.
+- CostRegBench scenarios are controlled cost-regression tests, not broad LLM intelligence evaluations.
 - Statistical tests are intentionally simple and CI-oriented.
 - Cost is only as accurate as the selected rate card and provider token usage.
 - OpenAI pricing in the default rate card is illustrative and should be reviewed before production use.

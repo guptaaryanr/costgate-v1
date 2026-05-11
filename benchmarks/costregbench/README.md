@@ -27,3 +27,10 @@ python benchmarks/costregbench/run.py --scenario neutral_noop
 Outputs are written to `.costgate/costregbench/` by default. The runner uses `allow_family_mismatch=True` because several scenarios intentionally alter suite, model, rate card, or provider behavior to simulate controlled regressions.
 
 Important: `actual=fail` or `actual=warn` is not itself a runner failure. Those are the expected Costgate verdicts for controlled regression scenarios. The runner exits non-zero only when a scenario's actual verdict does not match `expected_outcome.yaml`.
+
+The runner also writes:
+
+- `summary.csv`
+- `summary.md`
+
+The summary files include expected verdict, observed verdict, false-positive/false-negative markers, and major metric deltas for paper tables.
