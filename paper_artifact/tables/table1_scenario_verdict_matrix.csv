@@ -1,0 +1,9 @@
+scenario,regression_family,expected_verdict,observed_verdict,status,false_positive,false_negative,trigger_metric,notes
+agent_tool_loop_expansion,agent/tool-loop expansion,fail,fail,ok,false,false,cost_per_valid_success_usd,"Simulates a tool/agent loop expansion with more context, more completion tokens, and retries. Expected outcome: `fail`."
+context_bloat_regression,context bloat,fail,fail,ok,false,false,cost_per_valid_success_usd,Simulates added prompt/context tokens with the same valid output. Expected outcome: `fail`.
+cost_reduction_changes,cost reduction,pass,pass,ok,false,false,,Simulates a valid change that reduces input and output tokens. Expected outcome: `pass`.
+model_swap_regression,model swap,fail,fail,ok,false,false,cost_per_valid_success_usd,Simulates a switch from a cheaper resolved model to a more expensive resolved model with the same valid output and token counts. Expected outcome: `fail`.
+neutral_noop,neutral/no-op,pass,pass,ok,false,false,,Simulates a no-op change with identical valid cost behavior. Expected outcome: `pass`.
+prompt_verbosity_regression,prompt verbosity,fail,fail,ok,false,false,cost_per_valid_success_usd,Simulates a prompt change that causes longer completions while the task answer remains valid. Expected outcome: `fail`.
+retry_expansion_regression,retry expansion,warn,warn,ok,false,false,retry_rate,Simulates retry-rate growth without a hard cost failure. Expected outcome: `warn`.
+schema_expansion_regression,schema expansion,fail,fail,ok,false,false,cost_per_valid_success_usd,Simulates a larger structured response schema that increases completion tokens while remaining valid. Expected outcome: `fail`.

@@ -1,0 +1,41 @@
+{
+  "benchmark_name": "CostRegBench",
+  "benchmark_version": "costregbench.v1",
+  "command_used": "python benchmarks/costregbench/run.py --out paper_artifact/results/v1.0.0",
+  "costgate_version": "1.0.0",
+  "expected_verdicts": {
+    "agent_tool_loop_expansion": "fail",
+    "context_bloat_regression": "fail",
+    "cost_reduction_changes": "pass",
+    "model_swap_regression": "fail",
+    "neutral_noop": "pass",
+    "prompt_verbosity_regression": "fail",
+    "retry_expansion_regression": "warn",
+    "schema_expansion_regression": "fail"
+  },
+  "git_commit": "95ec600f790857d7e2e82193b470b60be14e9b53",
+  "observed_verdicts": {
+    "agent_tool_loop_expansion": "fail",
+    "context_bloat_regression": "fail",
+    "cost_reduction_changes": "pass",
+    "model_swap_regression": "fail",
+    "neutral_noop": "pass",
+    "prompt_verbosity_regression": "fail",
+    "retry_expansion_regression": "warn",
+    "schema_expansion_regression": "fail"
+  },
+  "python_version": "3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:12:24) [GCC 11.2.0]",
+  "release_tag": "v1.0.0",
+  "scenarios": [
+    "agent_tool_loop_expansion",
+    "context_bloat_regression",
+    "cost_reduction_changes",
+    "model_swap_regression",
+    "neutral_noop",
+    "prompt_verbosity_regression",
+    "retry_expansion_regression",
+    "schema_expansion_regression"
+  ],
+  "summary_schema_version": "costregbench.summary.v1",
+  "timestamp": "2026-05-12T22:29:46Z"
+}

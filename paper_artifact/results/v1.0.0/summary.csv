@@ -1,0 +1,9 @@
+scenario,expected,actual,status,trigger_metric,primary_metric_delta_%,retry_rate_delta_%,false_positive,false_negative,baseline_cost_per_valid_success_usd,candidate_cost_per_valid_success_usd,delta_pct_cost_per_valid_success_usd,baseline_task_success_rate,candidate_task_success_rate,delta_pct_task_success_rate,baseline_mean_input_tokens,candidate_mean_input_tokens,delta_pct_mean_input_tokens,baseline_mean_output_tokens,candidate_mean_output_tokens,delta_pct_mean_output_tokens,baseline_retry_rate,candidate_retry_rate,delta_pct_retry_rate,baseline_p95_latency_ms,candidate_p95_latency_ms,delta_pct_p95_latency_ms
+agent_tool_loop_expansion,fail,fail,ok,cost_per_valid_success_usd,1021.95,inf,false,false,4.1e-05,0.00046,1021.95,1,1,0,25,220,780,8,120,1400,0,1,inf,30,85,183.33
+context_bloat_regression,fail,fail,ok,cost_per_valid_success_usd,1357.14,0,false,false,1.4e-05,0.000204,1357.14,1,1,0,10,200,1900,2,2,0,0,0,0,20,26,30
+cost_reduction_changes,pass,pass,ok,,-83.33,0,false,false,0.00018,3e-05,-83.33,1,1,0,100,20,-80,40,5,-87.5,0,0,0,35,24,-31.43
+model_swap_regression,fail,fail,ok,cost_per_valid_success_usd,500,0,false,false,3e-05,0.00018,500,1,1,0,20,20,0,5,5,0,0,0,0,20,22,10
+neutral_noop,pass,pass,ok,,0,0,false,false,1.4e-05,1.4e-05,0,1,1,0,10,10,0,2,2,0,0,0,0,20,20,0
+prompt_verbosity_regression,fail,fail,ok,cost_per_valid_success_usd,400,0,false,false,1.4e-05,7e-05,400,1,1,0,10,10,0,2,30,1400,0,0,0,20,24,20
+retry_expansion_regression,warn,warn,ok,retry_rate,0,inf,false,false,1.4e-05,1.4e-05,0,1,1,0,10,10,0,2,2,0,0,1,inf,20,24,20
+schema_expansion_regression,fail,fail,ok,cost_per_valid_success_usd,413.33,0,false,false,3e-05,0.000154,413.33,1,1,0,14,14,0,8,70,775,0,0,0,20,28,40

@@ -1,0 +1,365 @@
+{
+  "baseline": {
+    "baseline_key": "b7f6e6504c4732ae4f946e6ee8dffc86879fbdac0b8bb02cb6ad8567b79fa68e__mock__mock-cheap__10960d7ad5705e3fc8a4b6f07180213064e56f70516b7aff136b30e2aaf95d74__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1",
+    "params_hash": "10960d7ad5705e3fc8a4b6f07180213064e56f70516b7aff136b30e2aaf95d74",
+    "pricing_version": 1,
+    "provider": "mock",
+    "rate_card_hash": "068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2",
+    "repeats": 5,
+    "requested_model": "mock-cheap",
+    "resolved_model": "mock-cheap",
+    "run_id": "run_20260512T222940Z_7651b9a09d",
+    "schema_version": "costgate.run.v1",
+    "suite_hash": "b7f6e6504c4732ae4f946e6ee8dffc86879fbdac0b8bb02cb6ad8567b79fa68e",
+    "timestamp": "2026-05-12T22:29:40Z",
+    "tokenizer": "provider_usage_or_costgate_estimator_v1"
+  },
+  "candidate": {
+    "baseline_key": "6d1f2ab36aad08c8a45f00e453857c03c7008b1d1a6bef5b82899b7a953f7b68__mock__mock-cheap__282c8ae5b86fb21a518c78b88737ec666b430fb63e40ddbff526fd20da15fefb__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1",
+    "params_hash": "282c8ae5b86fb21a518c78b88737ec666b430fb63e40ddbff526fd20da15fefb",
+    "pricing_version": 1,
+    "provider": "mock",
+    "rate_card_hash": "068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2",
+    "repeats": 5,
+    "requested_model": "mock-cheap",
+    "resolved_model": "mock-cheap",
+    "run_id": "run_20260512T222940Z_577c278afe",
+    "schema_version": "costgate.run.v1",
+    "suite_hash": "6d1f2ab36aad08c8a45f00e453857c03c7008b1d1a6bef5b82899b7a953f7b68",
+    "timestamp": "2026-05-12T22:29:40Z",
+    "tokenizer": "provider_usage_or_costgate_estimator_v1"
+  },
+  "compared_metrics": [
+    "cost_per_valid_success_usd",
+    "retry_rate"
+  ],
+  "costgate_version": "1.0.0",
+  "drivers": {
+    "baseline_means": {
+      "cost_per_valid_success_usd": 4.1e-05,
+      "estimated_token_fraction": 0.0,
+      "mean_input_tokens": 25.0,
+      "mean_output_tokens": 8.0,
+      "p95_latency_ms": 30.0,
+      "retry_rate": 0.0,
+      "task_success_rate": 1.0
+    },
+    "candidate_means": {
+      "cost_per_valid_success_usd": 0.00046,
+      "estimated_token_fraction": 0.0,
+      "mean_input_tokens": 220.0,
+      "mean_output_tokens": 120.0,
+      "p95_latency_ms": 85.0,
+      "retry_rate": 1.0,
+      "task_success_rate": 1.0
+    },
+    "hints": [
+      "Output token increase: mean_output_tokens 8.0 -> 120.0.",
+      "Input/context token increase: mean_input_tokens 25.0 -> 220.0.",
+      "Retry increase: retry_rate 0.00 -> 1.00.",
+      "Latency noise/increase: p95_latency_ms 30 -> 85."
+    ]
+  },
+  "metrics": {
+    "cost_per_valid_success_usd": {
+      "delta": {
+        "absolute": 0.000419,
+        "pct": 1021.951219512195,
+        "worse_delta": 0.000419
+      },
+      "direction": "higher_is_worse",
+      "gate": {
+        "practical_exceeded": true,
+        "statistically_worse": true,
+        "triggered": true
+      },
+      "means": {
+        "baseline": 4.1e-05,
+        "candidate": 0.00046,
+        "pr": 0.00046
+      },
+      "metric": "cost_per_valid_success_usd",
+      "practical": {
+        "baseline_mean": 4.1e-05,
+        "candidate_mean": 0.00046,
+        "checks": {
+          "relative": true
+        },
+        "delta": 0.000419,
+        "delta_pct": 1021.951219512195,
+        "exceeds_threshold": true,
+        "insufficient_data": false,
+        "reasons": [],
+        "relative_threshold_details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "relative_threshold_frac": 0.1,
+        "worse_delta": 0.000419
+      },
+      "samples": {
+        "baseline": [
+          4.1e-05,
+          4.1e-05,
+          4.1e-05,
+          4.1e-05,
+          4.1e-05
+        ],
+        "candidate": [
+          0.00046,
+          0.00046,
+          0.00046,
+          0.00046,
+          0.00046
+        ],
+        "pr": [
+          0.00046,
+          0.00046,
+          0.00046,
+          0.00046,
+          0.00046
+        ]
+      },
+      "severity": "fail",
+      "stats": {
+        "alpha": 0.05,
+        "bootstrap_mean_diff_ci": {
+          "ci_high": 0.000419,
+          "ci_low": 0.000419,
+          "mean_diff": 0.000419
+        },
+        "bootstrap_oriented_mean_diff_ci": {
+          "ci_high": 0.000419,
+          "ci_low": 0.000419,
+          "mean_diff": 0.000419
+        },
+        "effect_size": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "delta": 1.0
+        },
+        "insufficient_data": false,
+        "mann_whitney_u": null,
+        "statistically_worse": true,
+        "test": "none"
+      },
+      "threshold": {
+        "details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "effective_pct": 10.0,
+        "max_absolute_value": null,
+        "min_absolute_delta_usd": 0.0,
+        "min_absolute_value": null
+      },
+      "verdict": "fail"
+    },
+    "retry_rate": {
+      "delta": {
+        "absolute": 1.0,
+        "pct": "inf",
+        "worse_delta": 1.0
+      },
+      "direction": "higher_is_worse",
+      "gate": {
+        "practical_exceeded": true,
+        "statistically_worse": true,
+        "triggered": true
+      },
+      "means": {
+        "baseline": 0.0,
+        "candidate": 1.0,
+        "pr": 1.0
+      },
+      "metric": "retry_rate",
+      "practical": {
+        "baseline_mean": 0.0,
+        "candidate_mean": 1.0,
+        "checks": {
+          "relative": true
+        },
+        "delta": 1.0,
+        "delta_pct": "inf",
+        "exceeds_threshold": true,
+        "insufficient_data": false,
+        "reasons": [],
+        "relative_threshold_details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "relative_threshold_frac": 0.1,
+        "worse_delta": 1.0
+      },
+      "samples": {
+        "baseline": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "candidate": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "pr": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "severity": "warn",
+      "stats": {
+        "alpha": 0.05,
+        "bootstrap_mean_diff_ci": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "mean_diff": 1.0
+        },
+        "bootstrap_oriented_mean_diff_ci": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "mean_diff": 1.0
+        },
+        "effect_size": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "delta": 1.0
+        },
+        "insufficient_data": false,
+        "mann_whitney_u": null,
+        "statistically_worse": true,
+        "test": "none"
+      },
+      "threshold": {
+        "details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "effective_pct": 10.0,
+        "max_absolute_value": null,
+        "min_absolute_delta_usd": null,
+        "min_absolute_value": null
+      },
+      "verdict": "warn"
+    }
+  },
+  "overall_verdict": "fail",
+  "per_metric_verdicts": {
+    "cost_per_valid_success_usd": "fail",
+    "retry_rate": "warn"
+  },
+  "policy_hash": "0458f4d7b6ed36df83df06a494017ba73ffdb287719e67cc83f71b2777876097",
+  "policy_used": {
+    "alpha": 0.05,
+    "gates": {
+      "cost_per_valid_success_usd": {
+        "alpha": 0.05,
+        "direction": "higher_is_worse",
+        "max_absolute_value": null,
+        "max_relative_decrease": null,
+        "max_relative_increase": 0.1,
+        "metric": "cost_per_valid_success_usd",
+        "min_absolute_delta_usd": 0.0,
+        "min_absolute_value": null,
+        "severity": "fail",
+        "statistical_test": "none"
+      },
+      "retry_rate": {
+        "alpha": 0.05,
+        "direction": "higher_is_worse",
+        "max_absolute_value": null,
+        "max_relative_decrease": null,
+        "max_relative_increase": 0.1,
+        "metric": "retry_rate",
+        "min_absolute_delta_usd": null,
+        "min_absolute_value": null,
+        "severity": "warn",
+        "statistical_test": "none"
+      }
+    },
+    "metrics_to_gate": [
+      "cost_per_valid_success_usd",
+      "retry_rate"
+    ],
+    "min_absolute_delta_usd": 1e-05,
+    "min_repeats": 5,
+    "min_sample_size": 5,
+    "regression_threshold_pct": {
+      "cost_per_valid_success_usd": 10.0,
+      "retry_rate": 10.0
+    },
+    "variance_aware": {
+      "enabled": false,
+      "k": 3.0
+    },
+    "version": 1
+  },
+  "report_path": "paper_artifact/results/v1.0.0/scenario_reports/agent_tool_loop_expansion/report.md",
+  "schema_version": "costgate.compare.v1",
+  "statistical_results": {
+    "cost_per_valid_success_usd": {
+      "alpha": 0.05,
+      "bootstrap_mean_diff_ci": {
+        "ci_high": 0.000419,
+        "ci_low": 0.000419,
+        "mean_diff": 0.000419
+      },
+      "bootstrap_oriented_mean_diff_ci": {
+        "ci_high": 0.000419,
+        "ci_low": 0.000419,
+        "mean_diff": 0.000419
+      },
+      "effect_size": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "delta": 1.0
+      },
+      "insufficient_data": false,
+      "mann_whitney_u": null,
+      "statistically_worse": true,
+      "test": "none"
+    },
+    "retry_rate": {
+      "alpha": 0.05,
+      "bootstrap_mean_diff_ci": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean_diff": 1.0
+      },
+      "bootstrap_oriented_mean_diff_ci": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean_diff": 1.0
+      },
+      "effect_size": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "delta": 1.0
+      },
+      "insufficient_data": false,
+      "mann_whitney_u": null,
+      "statistically_worse": true,
+      "test": "none"
+    }
+  },
+  "verdict": {
+    "failures": [
+      "cost_per_valid_success_usd"
+    ],
+    "insufficient_data": [],
+    "regressions": [
+      "cost_per_valid_success_usd"
+    ],
+    "status": "fail",
+    "warnings": [
+      "retry_rate"
+    ]
+  }
+}

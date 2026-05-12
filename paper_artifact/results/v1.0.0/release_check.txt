@@ -1,0 +1,39 @@
+[release-check] package version
+1.0.0
+[release-check] pytest
+.............................................                            [100%]
+45 passed in 13.57s
+[release-check] CLI help
+[release-check] mock provider example
+Wrote results: .costgate/release-check/mock-results.json
+Baseline family key: 31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06__mock__mock-cheap__34b9a03584c06a503521bca2be1ec3cad36cb4d6e0a36e5f7ae451903ee57548__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1
+[release-check] mock baseline/candidate comparison
+Wrote results: .costgate/release-check/baseline.json
+Baseline family key: 31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06__mock__mock-cheap__34b9a03584c06a503521bca2be1ec3cad36cb4d6e0a36e5f7ae451903ee57548__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1
+Wrote results: .costgate/release-check/candidate.json
+Baseline family key: 31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06__mock__mock-cheap__34b9a03584c06a503521bca2be1ec3cad36cb4d6e0a36e5f7ae451903ee57548__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1
+Verdict: pass
+Wrote compare JSON: .costgate/release-check/compare.json
+Wrote report: .costgate/release-check/report.md
+[release-check] CostRegBench smoke
+neutral_noop: actual=pass expected=pass status=ok
+CostRegBench completed: 1/1 scenario(s) matched expectations.
+Wrote summary: .costgate/costregbench-smoke/summary.csv
+Wrote summary: .costgate/costregbench-smoke/summary.md
+Wrote manifest: .costgate/costregbench-smoke/benchmark_manifest.json
+[release-check] ruff
+All checks passed!
+[release-check] actionlint
+[release-check] gitleaks
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+5:29PM INF scanned ~990953 bytes (990.95 KB) in 360ms
+5:29PM INF no leaks found
+[release-check] complete
+
+exit_code: 0

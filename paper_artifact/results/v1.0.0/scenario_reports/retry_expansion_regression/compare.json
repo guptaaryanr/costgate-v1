@@ -1,0 +1,226 @@
+{
+  "baseline": {
+    "baseline_key": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06__mock__mock-cheap__a6525238610454a7a81d6147bcd8a7c7ec3f47d3543ca232613d5edd458bb56d__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1",
+    "params_hash": "a6525238610454a7a81d6147bcd8a7c7ec3f47d3543ca232613d5edd458bb56d",
+    "pricing_version": 1,
+    "provider": "mock",
+    "rate_card_hash": "068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2",
+    "repeats": 5,
+    "requested_model": "mock-cheap",
+    "resolved_model": "mock-cheap",
+    "run_id": "run_20260512T222945Z_c574faa704",
+    "schema_version": "costgate.run.v1",
+    "suite_hash": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06",
+    "timestamp": "2026-05-12T22:29:45Z",
+    "tokenizer": "provider_usage_or_costgate_estimator_v1"
+  },
+  "candidate": {
+    "baseline_key": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06__mock__mock-cheap__ebc3b66d64661fca8fdf8fd58ce0b573d8fcf358be84590df71202d752425492__068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2__costgate.run.v1",
+    "params_hash": "ebc3b66d64661fca8fdf8fd58ce0b573d8fcf358be84590df71202d752425492",
+    "pricing_version": 1,
+    "provider": "mock",
+    "rate_card_hash": "068a7d659bdad0b33828c14425292a3ea8c9deb642571eb383fc499f8fb324d2",
+    "repeats": 5,
+    "requested_model": "mock-cheap",
+    "resolved_model": "mock-cheap",
+    "run_id": "run_20260512T222945Z_23608d85b7",
+    "schema_version": "costgate.run.v1",
+    "suite_hash": "31bcfeb2e40612e4434a5172a2ffc3c97cb51105d4eabb94a6b7a128cd387e06",
+    "timestamp": "2026-05-12T22:29:45Z",
+    "tokenizer": "provider_usage_or_costgate_estimator_v1"
+  },
+  "compared_metrics": [
+    "retry_rate"
+  ],
+  "costgate_version": "1.0.0",
+  "drivers": {
+    "baseline_means": {
+      "cost_per_valid_success_usd": 1.4000000000000001e-05,
+      "estimated_token_fraction": 0.0,
+      "mean_input_tokens": 10.0,
+      "mean_output_tokens": 2.0,
+      "p95_latency_ms": 20.0,
+      "retry_rate": 0.0,
+      "task_success_rate": 1.0
+    },
+    "candidate_means": {
+      "cost_per_valid_success_usd": 1.4000000000000001e-05,
+      "estimated_token_fraction": 0.0,
+      "mean_input_tokens": 10.0,
+      "mean_output_tokens": 2.0,
+      "p95_latency_ms": 24.0,
+      "retry_rate": 1.0,
+      "task_success_rate": 1.0
+    },
+    "hints": [
+      "Latency noise/increase: p95_latency_ms 20 -> 24."
+    ]
+  },
+  "metrics": {
+    "retry_rate": {
+      "delta": {
+        "absolute": 1.0,
+        "pct": "inf",
+        "worse_delta": 1.0
+      },
+      "direction": "higher_is_worse",
+      "gate": {
+        "practical_exceeded": true,
+        "statistically_worse": true,
+        "triggered": true
+      },
+      "means": {
+        "baseline": 0.0,
+        "candidate": 1.0,
+        "pr": 1.0
+      },
+      "metric": "retry_rate",
+      "practical": {
+        "baseline_mean": 0.0,
+        "candidate_mean": 1.0,
+        "checks": {
+          "relative": true
+        },
+        "delta": 1.0,
+        "delta_pct": "inf",
+        "exceeds_threshold": true,
+        "insufficient_data": false,
+        "reasons": [],
+        "relative_threshold_details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "relative_threshold_frac": 0.1,
+        "worse_delta": 1.0
+      },
+      "samples": {
+        "baseline": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "candidate": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "pr": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "severity": "warn",
+      "stats": {
+        "alpha": 0.05,
+        "bootstrap_mean_diff_ci": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "mean_diff": 1.0
+        },
+        "bootstrap_oriented_mean_diff_ci": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "mean_diff": 1.0
+        },
+        "effect_size": {
+          "ci_high": 1.0,
+          "ci_low": 1.0,
+          "delta": 1.0
+        },
+        "insufficient_data": false,
+        "mann_whitney_u": null,
+        "statistically_worse": true,
+        "test": "none"
+      },
+      "threshold": {
+        "details": {
+          "configured_fraction": 0.1,
+          "variance_aware_enabled": false
+        },
+        "effective_pct": 10.0,
+        "max_absolute_value": null,
+        "min_absolute_delta_usd": null,
+        "min_absolute_value": null
+      },
+      "verdict": "warn"
+    }
+  },
+  "overall_verdict": "warn",
+  "per_metric_verdicts": {
+    "retry_rate": "warn"
+  },
+  "policy_hash": "97ab33cb43297cefae3dd3917f8c0543d3cf6b1a2ce8ae88ab2b113d66b6af36",
+  "policy_used": {
+    "alpha": 0.05,
+    "gates": {
+      "retry_rate": {
+        "alpha": 0.05,
+        "direction": "higher_is_worse",
+        "max_absolute_value": null,
+        "max_relative_decrease": null,
+        "max_relative_increase": 0.1,
+        "metric": "retry_rate",
+        "min_absolute_delta_usd": null,
+        "min_absolute_value": null,
+        "severity": "warn",
+        "statistical_test": "none"
+      }
+    },
+    "metrics_to_gate": [
+      "retry_rate"
+    ],
+    "min_absolute_delta_usd": 1e-05,
+    "min_repeats": 5,
+    "min_sample_size": 5,
+    "regression_threshold_pct": {
+      "retry_rate": 10.0
+    },
+    "variance_aware": {
+      "enabled": false,
+      "k": 3.0
+    },
+    "version": 1
+  },
+  "report_path": "paper_artifact/results/v1.0.0/scenario_reports/retry_expansion_regression/report.md",
+  "schema_version": "costgate.compare.v1",
+  "statistical_results": {
+    "retry_rate": {
+      "alpha": 0.05,
+      "bootstrap_mean_diff_ci": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean_diff": 1.0
+      },
+      "bootstrap_oriented_mean_diff_ci": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "mean_diff": 1.0
+      },
+      "effect_size": {
+        "ci_high": 1.0,
+        "ci_low": 1.0,
+        "delta": 1.0
+      },
+      "insufficient_data": false,
+      "mann_whitney_u": null,
+      "statistically_worse": true,
+      "test": "none"
+    }
+  },
+  "verdict": {
+    "failures": [],
+    "insufficient_data": [],
+    "regressions": [],
+    "status": "warn",
+    "warnings": [
+      "retry_rate"
+    ]
+  }
+}

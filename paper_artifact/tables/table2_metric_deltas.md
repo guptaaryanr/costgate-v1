@@ -1,0 +1,12 @@
+# Table2 Metric Deltas
+
+| scenario | cost_per_valid_success_delta_% | total_cost_delta_% | input_tokens_delta_% | output_tokens_delta_% | total_tokens_delta_% | retry_rate_delta_% | task_success_delta_% | latency_p95_delta_% | primary_trigger_metric |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| agent_tool_loop_expansion | 1021.95 | 1021.95 | 780 | 1400 | 930.3 | inf | 0 | 183.33 | cost_per_valid_success_usd |
+| context_bloat_regression | 1357.14 | 1357.14 | 1900 | 0 | 1583.33 | 0 | 0 | 30 | cost_per_valid_success_usd |
+| cost_reduction_changes | -83.33 | -83.33 | -80 | -87.5 | -82.14 | 0 | 0 | -31.43 |  |
+| model_swap_regression | 500 | 500 | 0 | 0 | 0 | 0 | 0 | 10 | cost_per_valid_success_usd |
+| neutral_noop | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |  |
+| prompt_verbosity_regression | 400 | 400 | 0 | 1400 | 233.33 | 0 | 0 | 20 | cost_per_valid_success_usd |
+| retry_expansion_regression | 0 | 0 | 0 | 0 | 0 | inf | 0 | 20 | retry_rate |
+| schema_expansion_regression | 413.33 | 413.33 | 0 | 775 | 281.82 | 0 | 0 | 40 | cost_per_valid_success_usd |

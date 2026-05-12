@@ -36,3 +36,11 @@ gitleaks-*-report.json
 .DS_Store
 .idea/
 .vscode/
+
+# Generated intermediate paper/benchmark runs
+paper_artifact/results/costregbench-*/
+paper_artifact/results/v1.0.0rc1/
+
+# Raw per-run generated artifacts are reproducible from configs
+paper_artifact/results/**/baseline.json
+paper_artifact/results/**/candidate.json
