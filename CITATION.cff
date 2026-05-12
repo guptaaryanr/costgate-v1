@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use Costgate in research or publication, please cite it using this metadata."
+title: "Costgate"
+version: "1.0.0"
+abstract: "CI-native LLM inference cost regression testing framework."
+authors:
+  - family-names: "Gupta"
+    given-names: "Aryan"
+license: "MIT"
+repository-code: "https://github.com/guptaaryanr/costgate-v1"
+keywords:
+  - "LLM"
+  - "continuous integration"
+  - "cost regression"
+  - "inference cost"
+  - "software testing"
+  - "reproducibility"

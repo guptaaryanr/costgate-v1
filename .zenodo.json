@@ -1,0 +1,28 @@
+{
+  "title": "Costgate",
+  "description": "CI-native LLM inference cost regression testing framework",
+  "creators": [
+    {
+      "name": "Gupta, Aryan"
+    }
+  ],
+  "version": "1.0.0",
+  "license": "mit-license",
+  "upload_type": "software",
+  "keywords": [
+    "LLM",
+    "continuous integration",
+    "cost regression",
+    "inference cost",
+    "software testing",
+    "reproducibility"
+  ],
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/guptaaryanr/costgate-v1",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
+  ]
+}

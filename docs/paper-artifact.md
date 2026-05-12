@@ -44,6 +44,20 @@ Scenarios with `actual=fail` or `actual=warn` are successful when the value
 matches `expected_outcome.yaml`; those cases are controlled regressions that
 Costgate is expected to catch.
 
+## Final Release Artifact
+
+For the final v1.0.0 release, generate the frozen paper artifact from the final
+release commit after version metadata has been changed to `1.0.0`:
+
+```bash
+python scripts/freeze_release_artifact.py --clean --out paper_artifact/results/v1.0.0
+```
+
+This captures release validation output, a secret-scan result or manual note,
+environment metadata, benchmark summaries, and per-scenario reports. The
+`paper_artifact/results/v1.0.0/README.md` file is only a template until this
+command is run from the final release commit.
+
 ## Smoke Test
 
 ```bash
@@ -108,6 +122,7 @@ For a release or Zenodo artifact, archive:
 - `benchmarks/costregbench/`
 - `paper_artifact/`
 - `docs/paper-artifact.md`
+- `docs/release-v1.0.0.md`
 - generated `summary.csv` and `summary.md`
 - optional per-scenario `compare.json` and `report.md`
 
