@@ -1,0 +1,4 @@
+python_version: 3.12.4 | packaged by Anaconda, Inc. | (main, Jun 18 2024, 15:12:24) [GCC 11.2.0]
+platform: Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.35
+package_version: 1.0.0rc1
+installed_package_mode: editable (file:///home/arygupta/costgate-v1-clean)
